@@ -1,0 +1,847 @@
+20251027-165302 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\utils\version_utils.py:76: The name tf.executing_eagerly_outside_functions is deprecated. Please use tf.compat.v1.executing_eagerly_outside_functions instead.
+
+20251027-165302 ============================================================
+20251027-165302 FingerNet 指纹识别系统启动
+20251027-165302 模式: deploy
+20251027-165302 GPU: 0
+20251027-165302 输出目录: ../output/20251027-165302
+20251027-165302 ============================================================
+20251027-165302 开始部署模式...
+20251027-165302 处理数据集 0: ../datasets/NISTSD27/images/
+20251027-165302 Predicting 0:
+20251027-165302 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\layers\normalization\batch_normalization.py:964: The name tf.nn.fused_batch_norm is deprecated. Please use tf.compat.v1.nn.fused_batch_norm instead.
+
+20251027-165302 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\layers\normalization\batch_normalization.py:883: _colocate_with (from tensorflow.python.framework.ops) is deprecated and will be removed in a future version.
+Instructions for updating:
+Colocations handled automatically by placer.
+20251027-165304 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\saving\legacy\save.py:538: The name tf.train.NewCheckpointReader is deprecated. Please use tf.compat.v1.train.NewCheckpointReader instead.
+
+20251027-165304 Creating converter from 3 to 5
+20251027-165305 0 1 / 1: B101L9U
+20251027-165305 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\engine\training_v1.py:635: The name tf.data.Iterator is deprecated. Please use tf.compat.v1.data.Iterator instead.
+
+20251027-165305 From C:\ProgramData\anaconda3\envs\fingernet—p3.10-cpu\lib\site-packages\keras\src\engine\training_utils_v1.py:50: The name tf.ragged.RaggedTensorValue is deprecated. Please use tf.compat.v1.ragged.RaggedTensorValue instead.
+
+20251027-165308 检测到细节点数量: 12 (NMS前: 42)
+20251027-165308 细节点置信度 - 平均: 0.791, 最大: 0.956
+20251027-165308 Loaded backend Agg version v2.2.
+20251027-165308 findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0.
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizThreeSymReg.ttf', name='STIXSizeThreeSym', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSerif.ttf', name='DejaVu Serif', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf', name='DejaVu Sans', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 0.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXNonUniBol.ttf', name='STIXNonUnicode', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSansMono-BoldOblique.ttf', name='DejaVu Sans Mono', style='oblique', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXGeneralItalic.ttf', name='STIXGeneral', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSerif-Bold.ttf', name='DejaVu Serif', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXNonUni.ttf', name='STIXNonUnicode', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSansMono-Bold.ttf', name='DejaVu Sans Mono', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSerifDisplay.ttf', name='DejaVu Serif Display', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizOneSymBol.ttf', name='STIXSizeOneSym', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSansMono.ttf', name='DejaVu Sans Mono', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmss10.ttf', name='cmss10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans-Oblique.ttf', name='DejaVu Sans', style='oblique', variant='normal', weight=400, stretch='normal', size='scalable')) = 1.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXGeneral.ttf', name='STIXGeneral', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSansMono-Oblique.ttf', name='DejaVu Sans Mono', style='oblique', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmb10.ttf', name='cmb10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmtt10.ttf', name='cmtt10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizTwoSymBol.ttf', name='STIXSizeTwoSym', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizTwoSymReg.ttf', name='STIXSizeTwoSym', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSerif-BoldItalic.ttf', name='DejaVu Serif', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmsy10.ttf', name='cmsy10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizOneSymReg.ttf', name='STIXSizeOneSym', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmex10.ttf', name='cmex10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXGeneralBolIta.ttf', name='STIXGeneral', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizFourSymBol.ttf', name='STIXSizeFourSym', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizThreeSymBol.ttf', name='STIXSizeThreeSym', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans-Bold.ttf', name='DejaVu Sans', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 0.33499999999999996
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizFourSymReg.ttf', name='STIXSizeFourSym', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXNonUniIta.ttf', name='STIXNonUnicode', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXSizFiveSymReg.ttf', name='STIXSizeFiveSym', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmr10.ttf', name='cmr10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXNonUniBolIta.ttf', name='STIXNonUnicode', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans-BoldOblique.ttf', name='DejaVu Sans', style='oblique', variant='normal', weight=700, stretch='normal', size='scalable')) = 1.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\cmmi10.ttf', name='cmmi10', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSerif-Italic.ttf', name='DejaVu Serif', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\STIXGeneralBol.ttf', name='STIXGeneral', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSansDisplay.ttf', name='DejaVu Sans Display', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BROADW.TTF', name='Broadway', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeuii.ttf', name='Segoe UI', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALIFR.TTF', name='Californian FB', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SitkaB.ttc', name='Sitka Small', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\DUBAI-BOLD.TTF', name='Dubai', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candaraz.ttf', name='Candara', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguisym.ttf', name='Segoe UI Symbol', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\YuGothR.ttc', name='Yu Gothic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candara.ttf', name='Candara', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOOKOSI.TTF', name='Bookman Old Style', style='italic', variant='normal', weight=300, stretch='normal', size='scalable')) = 11.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeuil.ttf', name='Segoe UI', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_CBI.TTF', name='Bodoni MT', style='italic', variant='normal', weight=700, stretch='condensed', size='scalable')) = 11.535
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\trebucit.ttf', name='Trebuchet MS', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\taile.ttf', name='Microsoft Tai Le', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ERASDEMI.TTF', name='Eras Demi ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candarab.ttf', name='Candara', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\constanb.ttf', name='Constantia', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ARIALNBI.TTF', name='Arial', style='italic', variant='normal', weight=700, stretch='condensed', size='scalable')) = 7.8986363636363635
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\WINGDNG3.TTF', name='Wingdings 3', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Symbol Tiger Expert.ttf', name='Symbol Tiger Expert', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\arialbd.ttf', name='Arial', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 6.698636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\cour.ttf', name='Courier New', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CENSCBK.TTF', name='Century Schoolbook', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRAHV.TTF', name='Franklin Gothic Heavy', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguibl.ttf', name='Segoe UI', style='normal', variant='normal', weight=900, stretch='normal', size='scalable')) = 10.525
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCCB____.TTF', name='Tw Cen MT Condensed', style='normal', variant='normal', weight=700, stretch='condensed', size='scalable')) = 10.535
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msyhbd.ttc', name='Microsoft YaHei', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\trebucbi.ttf', name='Trebuchet MS', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALISTB.TTF', name='Calisto MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCCEB.TTF', name='Tw Cen MT Condensed Extra Bold', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCK.TTF', name='Rockwell', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euextra.ttf', name='Euclid Extra', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\palab.ttf', name='Palatino Linotype', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PLAYBILL.TTF', name='Playbill', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoepr.ttf', name='Segoe Print', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRUSHSCI.TTF', name='Brush Script MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\YuGothB.ttc', name='Yu Gothic', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\JOKERMAN.TTF', name='Jokerman', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\pala.ttf', name='Palatino Linotype', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\mvboli.ttf', name='MV Boli', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\POORICH.TTF', name='Poor Richard', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\VIVALDII.TTF', name='Vivaldi', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\KUNSTLER.TTF', name='Kunstler Script', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROGFonts-Regular.otf', name='ROG Fonts', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\fences.ttf', name='Fences', style='normal', variant='normal', weight=5, stretch='normal', size='scalable')) = 10.42525
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msgothic.ttc', name='MS Gothic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SCRIPTBL.TTF', name='Script MT Bold', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MATURASC.TTF', name='Matura MT Script Capitals', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRADMIT.TTF', name='Franklin Gothic Demi', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BSSYM7.TTF', name='Bookshelf Symbol 7', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\sylfaen.ttf', name='Sylfaen', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segmdl2.ttf', name='Segoe MDL2 Assets', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\HARLOWSI.TTF', name='Harlow Solid Italic', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STKAITI.TTF', name='STKaiti', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\verdana.ttf', name='Verdana', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 3.6863636363636365
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\couri.ttf', name='Courier New', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\malgun.ttf', name='Malgun Gothic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PERB____.TTF', name='Perpetua', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eumat1b.ttf', name='Euclid Math One', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\lucon.ttf', name='Lucida Console', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRAHVIT.TTF', name='Franklin Gothic Heavy', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\malgunsl.ttf', name='Malgun Gothic', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\VINERITC.TTF', name='Viner Hand ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguisli.ttf', name='Segoe UI', style='italic', variant='normal', weight=350, stretch='normal', size='scalable')) = 11.0975
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALIFB.TTF', name='Californian FB', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BKANT.TTF', name='Book Antiqua', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRABK.TTF', name='Franklin Gothic Book', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LTYPEB.TTF', name='Lucida Sans Typewriter', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eumat2b.ttf', name='Euclid Math Two', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\timesi.ttf', name='Times New Roman', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_BI.TTF', name='Bodoni MT', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibrii.ttf', name='Calibri', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibrili.ttf', name='Calibri', style='italic', variant='normal', weight=300, stretch='normal', size='scalable')) = 11.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRADMCN.TTF', name='Franklin Gothic Demi Cond', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\kingsoft\\office6\\omath\\DejaVuMathTeXGyre.ttf', name='DejaVu Math TeX Gyre', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\framd.ttf', name='Franklin Gothic Medium', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_I.TTF', name='Bodoni MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILSANUB.TTF', name='Gill Sans Ultra Bold', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SitkaI.ttc', name='Sitka Small', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeui.ttf', name='Segoe UI', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STENCIL.TTF', name='Stencil', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msyh.ttc', name='Microsoft YaHei', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALIFI.TTF', name='Californian FB', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\consola.ttf', name='Consolas', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRITANIC.TTF', name='Britannic Bold', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\l_10646.ttf', name='Lucida Sans Unicode', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ALGER.TTF', name='Algerian', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LFAX.TTF', name='Lucida Fax', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BERNHC.TTF', name='Bernard MT Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRLNSDB.TTF', name='Berlin Sans FB Demi', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoescb.ttf', name='Segoe Script', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GIL_____.TTF', name='Gill Sans MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\cambriaz.ttf', name='Cambria', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\trebucbd.ttf', name='Trebuchet MS', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Tiger Expert.ttf', name='Tiger Expert', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\malgunbd.ttf', name='Malgun Gothic', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CascadiaMono.ttf', name='Cascadia Mono', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\cambriab.ttf', name='Cambria', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PERTILI.TTF', name='Perpetua Titling MT', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PERI____.TTF', name='Perpetua', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\DUBAI-MEDIUM.TTF', name='Dubai', style='normal', variant='normal', weight=500, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRAMDCN.TTF', name='Franklin Gothic Medium Cond', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\simkai.ttf', name='KaiTi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ntailub.ttf', name='Microsoft New Tai Lue', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SCHLBKI.TTF', name='Century Schoolbook', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCM_____.TTF', name='Tw Cen MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\OCRAEXT.TTF', name='OCR A Extended', style='normal', variant='normal', weight=400, stretch='expanded', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_CR.TTF', name='Bodoni MT', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\mingliub.ttc', name='MingLiU-ExtB', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MOD20.TTF', name='Modern No. 20', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LSANSI.TTF', name='Lucida Sans', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOTHICBI.TTF', name='Century Gothic', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\bahnschrift.ttf', name='Bahnschrift', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msjhbd.ttc', name='Microsoft JhengHei', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ERASBD.TTF', name='Eras Bold ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PERBI___.TTF', name='Perpetua', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GARAIT.TTF', name='Garamond', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCC____.TTF', name='Rockwell Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candarali.ttf', name='Candara', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\gadugib.ttf', name='Gadugi', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ANTQUAI.TTF', name='Book Antiqua', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LFAXD.TTF', name='Lucida Fax', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCKB.TTF', name='Rockwell', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALISTI.TTF', name='Calisto MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FTLTLT.TTF', name='Footlight MT Light', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_CB.TTF', name='Bodoni MT', style='normal', variant='normal', weight=700, stretch='condensed', size='scalable')) = 10.535
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbelb.ttf', name='Corbel', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\RAGE.TTF', name='Rage Italic', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\comici.ttf', name='Comic Sans MS', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LeelaUIb.ttf', name='Leelawadee UI', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\himalaya.ttf', name='Microsoft Himalaya', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Sitka.ttc', name='Sitka Small', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCCB___.TTF', name='Rockwell Condensed', style='normal', variant='normal', weight=700, stretch='condensed', size='scalable')) = 10.535
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\COPRGTB.TTF', name='Copperplate Gothic Bold', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SCHLBKB.TTF', name='Century Schoolbook', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOUDOSB.TTF', name='Goudy Old Style', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCKBI.TTF', name='Rockwell', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCBI____.TTF', name='Tw Cen MT', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ONYX.TTF', name='Onyx', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\simfang.ttf', name='FangSong', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOTHICI.TTF', name='Century Gothic', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ARLRDBD.TTF', name='Arial Rounded MT Bold', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LTYPEO.TTF', name='Lucida Sans Typewriter', style='oblique', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BASKVILL.TTF', name='Baskerville Old Face', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_R.TTF', name='Bodoni MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ebrimabd.ttf', name='Ebrima', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\impact.ttf', name='Impact', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOOKOSBI.TTF', name='Bookman Old Style', style='italic', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\REFSPCL.TTF', name='MS Reference Specialty', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Dengl.ttf', name='DengXian', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ANTQUAB.TTF', name='Book Antiqua', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SIMYOU.TTF', name='YouYuan', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILC____.TTF', name='Gill Sans MT Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ITCKRIST.TTF', name='Kristen ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\arialbi.ttf', name='Arial', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 7.698636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LSANSD.TTF', name='Lucida Sans', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ERASMD.TTF', name='Eras Medium ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\wingding.ttf', name='Wingdings', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GARA.TTF', name='Garamond', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ITCEDSCR.TTF', name='Edwardian Script ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRSCRIPT.TTF', name='French Script MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbeli.ttf', name='Corbel', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LeelUIsl.ttf', name='Leelawadee UI', style='normal', variant='normal', weight=350, stretch='normal', size='scalable')) = 10.0975
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbelz.ttf', name='Corbel', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ARIALNI.TTF', name='Arial', style='italic', variant='normal', weight=400, stretch='condensed', size='scalable')) = 7.613636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euclidb.ttf', name='Euclid', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eucsymi.ttf', name='Euclid Symbol', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eucsymb.ttf', name='Euclid Symbol', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LFAXI.TTF', name='Lucida Fax', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msyi.ttf', name='Microsoft Yi Baiti', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candarai.ttf', name='Candara', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MTCORSVA.TTF', name='Monotype Corsiva', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euclidi.ttf', name='Euclid', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\holomdl2.ttf', name='HoloLens MDL2 Assets', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\timesbd.ttf', name='Times New Roman', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\HATTEN.TTF', name='Haettenschweiler', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\AGENCYB.TTF', name='Agency FB', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msjhl.ttc', name='Microsoft JhengHei', style='normal', variant='normal', weight=290, stretch='normal', size='scalable')) = 10.1545
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\arial.ttf', name='Arial', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 6.413636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\comic.ttf', name='Comic Sans MS', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\constani.ttf', name='Constantia', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_BLAR.TTF', name='Bodoni MT', style='normal', variant='normal', weight=900, stretch='normal', size='scalable')) = 10.525
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\mmrtextb.ttf', name='Myanmar Text', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\times.ttf', name='Times New Roman', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euclidbi.ttf', name='Euclid', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ARIALNB.TTF', name='Arial', style='normal', variant='normal', weight=700, stretch='condensed', size='scalable')) = 6.8986363636363635
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOTHIC.TTF', name='Century Gothic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CHILLER.TTF', name='Chiller', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STXINWEI.TTF', name='STXinwei', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\JUICE___.TTF', name='Juice ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\DUBAI-REGULAR.TTF', name='Dubai', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\framdit.ttf', name='Franklin Gothic Medium', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\courbd.ttf', name='Courier New', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Inkfree.ttf', name='Ink Free', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FZSTK.TTF', name='FZShuTi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SitkaZ.ttc', name='Sitka Small', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LBRITEDI.TTF', name='Lucida Bright', style='italic', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SCHLBKBI.TTF', name='Century Schoolbook', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILBI___.TTF', name='Gill Sans MT', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\simsun.ttc', name='SimSun', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\micross.ttf', name='Microsoft Sans Serif', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ELEPHNTI.TTF', name='Elephant', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\cambria.ttc', name='Cambria', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msjh.ttc', name='Microsoft JhengHei', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\comicz.ttf', name='Comic Sans MS', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LTYPE.TTF', name='Lucida Sans Typewriter', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\gadugi.ttf', name='Gadugi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\georgia.ttf', name='Georgia', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STLITI.TTF', name='STLiti', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STHUPO.TTF', name='STHupo', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguisb.ttf', name='Segoe UI', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ARIALN.TTF', name='Arial', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 6.613636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\mmrtext.ttf', name='Myanmar Text', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BELL.TTF', name='Bell MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbel.ttf', name='Corbel', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRLNSB.TTF', name='Berlin Sans FB', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\COLONNA.TTF', name='Colonna MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LBRITED.TTF', name='Lucida Bright', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\georgiaz.ttf', name='Georgia', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CENTAUR.TTF', name='Centaur', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALISTBI.TTF', name='Calisto MT', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\consolai.ttf', name='Consolas', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\HTOWERT.TTF', name='High Tower Text', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\COPRGTL.TTF', name='Copperplate Gothic Light', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ariblk.ttf', name='Arial', style='normal', variant='normal', weight=900, stretch='normal', size='scalable')) = 6.888636363636364
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ANTQUABI.TTF', name='Book Antiqua', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GLECB.TTF', name='Gloucester MT Extra Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeprb.ttf', name='Segoe Print', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\NirmalaS.ttf', name='Nirmala UI', style='normal', variant='normal', weight=350, stretch='normal', size='scalable')) = 10.0975
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PERTIBD.TTF', name='Perpetua Titling MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FELIXTI.TTF', name='Felix Titling', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BAUHS93.TTF', name='Bauhaus 93', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguiemj.ttf', name='Segoe UI Emoji', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOOKOSB.TTF', name='Bookman Old Style', style='normal', variant='normal', weight=600, stretch='normal', size='scalable')) = 10.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\AGENCYR.TTF', name='Agency FB', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\symbol.ttf', name='Symbol', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PER_____.TTF', name='Perpetua', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LSANSDI.TTF', name='Lucida Sans', style='italic', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\VLADIMIR.TTF', name='Vladimir Script', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ELEPHNT.TTF', name='Elephant', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_CI.TTF', name='Bodoni MT', style='italic', variant='normal', weight=400, stretch='condensed', size='scalable')) = 11.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\palabi.ttf', name='Palatino Linotype', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\verdanai.ttf', name='Verdana', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 4.6863636363636365
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FREESCPT.TTF', name='Freestyle Script', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Dengb.ttf', name='DengXian', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GIGI.TTF', name='Gigi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euextrab.ttf', name='Euclid Extra', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SHOWG.TTF', name='Showcard Gothic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOUDOS.TTF', name='Goudy Old Style', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\HTOWERTI.TTF', name='High Tower Text', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\tahoma.ttf', name='Tahoma', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibrib.ttf', name='Calibri', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PRISTINA.TTF', name='Pristina', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ariali.ttf', name='Arial', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 7.413636363636363
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Symbol Tiger.ttf', name='Symbol Tiger', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\COOPBL.TTF', name='Cooper Black', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\courbi.ttf', name='Courier New', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\comicbd.ttf', name='Comic Sans MS', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Tiger.ttf', name='Tiger', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GLSNECB.TTF', name='Gill Sans MT Ext Condensed Bold', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PARCHM.TTF', name='Parchment', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SIMLI.TTF', name='LiSu', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eucsymbi.ttf', name='Euclid Symbol', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibriz.ttf', name='Calibri', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\euclid.ttf', name='Euclid', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRADHITC.TTF', name='Bradley Hand ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILB____.TTF', name='Gill Sans MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\phagspa.ttf', name='Microsoft PhagsPa', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PALSCRI.TTF', name='Palace Script MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\verdanab.ttf', name='Verdana', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 3.9713636363636367
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LSANS.TTF', name='Lucida Sans', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguisbi.ttf', name='Segoe UI', style='italic', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ERASLGHT.TTF', name='Eras Light ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_BLAI.TTF', name='Bodoni MT', style='italic', variant='normal', weight=900, stretch='normal', size='scalable')) = 11.525
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FORTE.TTF', name='Forte', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STXIHEI.TTF', name='STXihei', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\WINGDNG2.TTF', name='Wingdings 2', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\taileb.ttf', name='Microsoft Tai Le', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\YuGothL.ttc', name='Yu Gothic', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LCALLIG.TTF', name='Lucida Calligraphy', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_B.TTF', name='Bodoni MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LBRITEI.TTF', name='Lucida Bright', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\REFSAN.TTF', name='MS Reference Sans Serif', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LFAXDI.TTF', name='Lucida Fax', style='italic', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOUDYSTO.TTF', name='Goudy Stout', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BELLB.TTF', name='Bell MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BELLI.TTF', name='Bell MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILLUBCD.TTF', name='Gill Sans Ultra Bold Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOOKOS.TTF', name='Bookman Old Style', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\cambriai.ttf', name='Cambria', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eumat1.ttf', name='Euclid Math One', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Mt Extra Tiger.ttf', name='MT Extra Tiger', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\tahomabd.ttf', name='Tahoma', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\simsunb.ttf', name='SimSun-ExtB', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Gabriola.ttf', name='Gabriola', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRADM.TTF', name='Franklin Gothic Demi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\IMPRISHA.TTF', name='Imprint MT Shadow', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\SNAP____.TTF', name='Snap ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\constan.ttf', name='Constantia', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOUDOSI.TTF', name='Goudy Old Style', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\ProgramData\\kingsoft\\office6\\KingsoftSymbol\\KingsoftSymbol.ttf', name='Kingsoft Symbol', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\georgiai.ttf', name='Georgia', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeuisl.ttf', name='Segoe UI', style='normal', variant='normal', weight=350, stretch='normal', size='scalable')) = 10.0975
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\NIAGSOL.TTF', name='Niagara Solid', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibril.ttf', name='Calibri', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\NirmalaB.ttf', name='Nirmala UI', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbell.ttf', name='Corbel', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GARABD.TTF', name='Garamond', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCMI____.TTF', name='Tw Cen MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\PAPYRUS.TTF', name='Papyrus', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Candaral.ttf', name='Candara', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeuiz.ttf', name='Segoe UI', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\DUBAI-LIGHT.TTF', name='Dubai', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\phagspab.ttf', name='Microsoft PhagsPa', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Deng.ttf', name='DengXian', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCKEB.TTF', name='Rockwell Extra Bold', style='normal', variant='normal', weight=800, stretch='normal', size='scalable')) = 10.43
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GILI____.TTF', name='Gill Sans MT', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FRABKIT.TTF', name='Franklin Gothic Book', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoesc.ttf', name='Segoe Script', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ITCBLKAD.TTF', name='Blackadder ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCB_____.TTF', name='Tw Cen MT', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\javatext.ttf', name='Javanese Text', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MISTRAL.TTF', name='Mistral', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STXINGKA.TTF', name='STXingkai', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LTYPEBO.TTF', name='Lucida Sans Typewriter', style='oblique', variant='normal', weight=600, stretch='normal', size='scalable')) = 11.24
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\constanz.ttf', name='Constantia', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ntailu.ttf', name='Microsoft New Tai Lue', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TEMPSITC.TTF', name='Tempus Sans ITC', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ENGR.TTF', name='Engravers MT', style='normal', variant='normal', weight=500, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MAIAN.TTF', name='Maiandra GD', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\webdings.ttf', name='Webdings', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BOD_PSTC.TTF', name='Bodoni MT', style='normal', variant='normal', weight=300, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\palai.ttf', name='Palatino Linotype', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Users\\123\\AppData\\Local\\Microsoft\\Windows\\Fonts\\MONACO.TTF', name='Monaco', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\INFROMAN.TTF', name='Informal Roman', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STFANGSO.TTF', name='STFangsong', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LATINWD.TTF', name='Wide Latin', style='normal', variant='normal', weight=400, stretch='expanded', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\segoeuib.ttf', name='Segoe UI', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LeelawUI.ttf', name='Leelawadee UI', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LHANDW.TTF', name='Lucida Handwriting', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\corbelli.ttf', name='Corbel', style='italic', variant='normal', weight=300, stretch='normal', size='scalable')) = 11.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STSONG.TTF', name='STSong', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\verdanaz.ttf', name='Verdana', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 4.971363636363637
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\MAGNETOB.TTF', name='Magneto', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eumat2.ttf', name='Euclid Math Two', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\timesbi.ttf', name='Times New Roman', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\NIAGENG.TTF', name='Niagara Engraved', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\TCCM____.TTF', name='Tw Cen MT Condensed', style='normal', variant='normal', weight=400, stretch='condensed', size='scalable')) = 10.25
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eucsym.ttf', name='Euclid Symbol', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\consolab.ttf', name='Consolas', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\YuGothM.ttc', name='Yu Gothic', style='normal', variant='normal', weight=500, stretch='normal', size='scalable')) = 10.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\RAVIE.TTF', name='Ravie', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\GOTHICB.TTF', name='Century Gothic', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CENTURY.TTF', name='Century', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\trebuc.ttf', name='Trebuchet MS', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\Nirmala.ttf', name='Nirmala UI', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CascadiaCode.ttf', name='Cascadia Code', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\simhei.ttf', name='SimHei', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\BRLNSR.TTF', name='Berlin Sans FB', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\monbaiti.ttf', name='Mongolian Baiti', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eufrak.ttf', name='Euclid Fraktur', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguihis.ttf', name='Segoe UI Historic', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ROCKI.TTF', name='Rockwell', style='italic', variant='normal', weight=400, stretch='normal', size='scalable')) = 11.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STZHONGS.TTF', name='STZhongsong', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguibli.ttf', name='Segoe UI', style='italic', variant='normal', weight=900, stretch='normal', size='scalable')) = 11.525
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\ebrima.ttf', name='Ebrima', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\seguili.ttf', name='Segoe UI', style='italic', variant='normal', weight=300, stretch='normal', size='scalable')) = 11.145
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\msyhl.ttc', name='Microsoft YaHei', style='normal', variant='normal', weight=290, stretch='normal', size='scalable')) = 10.1545
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\georgiab.ttf', name='Georgia', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\FZYTK.TTF', name='FZYaoTi', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CASTELAR.TTF', name='Castellar', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\STCAIYUN.TTF', name='STCaiyun', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CALIST.TTF', name='Calisto MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\calibri.ttf', name='Calibri', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\OUTLOOK.TTF', name='MS Outlook', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\mtextra_01.ttf', name='MT Extra', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\consolaz.ttf', name='Consolas', style='italic', variant='normal', weight=700, stretch='normal', size='scalable')) = 11.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\eufrakb.ttf', name='Euclid Fraktur', style='normal', variant='normal', weight=700, stretch='normal', size='scalable')) = 10.335
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\LBRITE.TTF', name='Lucida Bright', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\CURLZ___.TTF', name='Curlz MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\HARNGTON.TTF', name='Harrington', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: score(FontEntry(fname='C:\\Windows\\Fonts\\OLDENGL.TTF', name='Old English Text MT', style='normal', variant='normal', weight=400, stretch='normal', size='scalable')) = 10.05
+20251027-165308 findfont: Matching sans\-serif:style=normal:variant=normal:weight=normal:stretch=normal:size=10.0 to DejaVu Sans ('C:\\ProgramData\\anaconda3\\envs\\fingernet—p3.10-cpu\\lib\\site-packages\\matplotlib\\mpl-data\\fonts\\ttf\\DejaVuSans.ttf') with score of 0.050000.
+20251027-165310 Importing AvifImagePlugin
+20251027-165310 Importing BlpImagePlugin
+20251027-165310 Importing BmpImagePlugin
+20251027-165310 Importing BufrStubImagePlugin
+20251027-165310 Importing CurImagePlugin
+20251027-165310 Importing DcxImagePlugin
+20251027-165310 Importing DdsImagePlugin
+20251027-165310 Importing EpsImagePlugin
+20251027-165310 Importing FitsImagePlugin
+20251027-165310 Importing FliImagePlugin
+20251027-165310 Importing FpxImagePlugin
+20251027-165310 Image: failed to import FpxImagePlugin: No module named 'olefile'
+20251027-165310 Importing FtexImagePlugin
+20251027-165310 Importing GbrImagePlugin
+20251027-165310 Importing GifImagePlugin
+20251027-165310 Importing GribStubImagePlugin
+20251027-165310 Importing Hdf5StubImagePlugin
+20251027-165310 Importing IcnsImagePlugin
+20251027-165310 Importing IcoImagePlugin
+20251027-165310 Importing ImImagePlugin
+20251027-165310 Importing ImtImagePlugin
+20251027-165310 Importing IptcImagePlugin
+20251027-165310 Importing JpegImagePlugin
+20251027-165310 Importing Jpeg2KImagePlugin
+20251027-165310 Importing McIdasImagePlugin
+20251027-165310 Importing MicImagePlugin
+20251027-165310 Image: failed to import MicImagePlugin: No module named 'olefile'
+20251027-165310 Importing MpegImagePlugin
+20251027-165310 Importing MpoImagePlugin
+20251027-165310 Importing MspImagePlugin
+20251027-165310 Importing PalmImagePlugin
+20251027-165310 Importing PcdImagePlugin
+20251027-165310 Importing PcxImagePlugin
+20251027-165310 Importing PdfImagePlugin
+20251027-165310 Importing PixarImagePlugin
+20251027-165310 Importing PngImagePlugin
+20251027-165310 Importing PpmImagePlugin
+20251027-165310 Importing PsdImagePlugin
+20251027-165310 Importing QoiImagePlugin
+20251027-165310 Importing SgiImagePlugin
+20251027-165310 Importing SpiderImagePlugin
+20251027-165310 Importing SunImagePlugin
+20251027-165310 Importing TgaImagePlugin
+20251027-165310 Importing TiffImagePlugin
+20251027-165310 Importing WebPImagePlugin
+20251027-165310 Importing WmfImagePlugin
+20251027-165310 Importing XbmImagePlugin
+20251027-165310 Importing XpmImagePlugin
+20251027-165310 Importing XVThumbImagePlugin
+20251027-165310 load+conv: 2.398s, seg-postpro+nms: 0.202, draw: 2.206
+20251027-165310 Average: load+conv: 2.398s, oir-select+seg-post+nms: 0.202, draw: 2.206
+20251027-165310 处理数据集 1: ../datasets/CISL24218/
+20251027-165310 Predicting 1:
+20251027-165314 1 1 / 1: A0100003009991600022036_2
+20251027-165316 检测到细节点数量: 27 (NMS前: 98)
+20251027-165316 细节点置信度 - 平均: 0.789, 最大: 0.973
+20251027-165317 load+conv: 1.339s, seg-postpro+nms: 0.370, draw: 1.117
+20251027-165317 Average: load+conv: 1.339s, oir-select+seg-post+nms: 0.370, draw: 1.117
+20251027-165317 处理数据集 2: ../datasets/db4_b/
+20251027-165317 Predicting 2:
+20251027-165322 2 1 / 80: 00000_00
+20251027-165324 检测到细节点数量: 16 (NMS前: 51)
+20251027-165324 细节点置信度 - 平均: 0.833, 最大: 0.969
+20251027-165324 load+conv: 0.995s, seg-postpro+nms: 0.493, draw: 0.356
+20251027-165324 2 2 / 80: 00000_01
+20251027-165325 检测到细节点数量: 15 (NMS前: 58)
+20251027-165325 细节点置信度 - 平均: 0.896, 最大: 0.985
+20251027-165325 load+conv: 0.246s, seg-postpro+nms: 0.477, draw: 0.318
+20251027-165325 2 3 / 80: 00000_02
+20251027-165326 检测到细节点数量: 7 (NMS前: 21)
+20251027-165326 细节点置信度 - 平均: 0.726, 最大: 0.888
+20251027-165326 load+conv: 0.221s, seg-postpro+nms: 0.460, draw: 0.305
+20251027-165326 2 4 / 80: 00000_03
+20251027-165327 检测到细节点数量: 17 (NMS前: 52)
+20251027-165327 细节点置信度 - 平均: 0.829, 最大: 0.967
+20251027-165328 load+conv: 0.209s, seg-postpro+nms: 0.465, draw: 0.608
+20251027-165328 2 5 / 80: 00000_04
+20251027-165328 检测到细节点数量: 12 (NMS前: 31)
+20251027-165328 细节点置信度 - 平均: 0.740, 最大: 0.935
+20251027-165329 load+conv: 0.234s, seg-postpro+nms: 0.484, draw: 0.330
+20251027-165329 2 6 / 80: 00000_05
+20251027-165329 检测到细节点数量: 15 (NMS前: 51)
+20251027-165329 细节点置信度 - 平均: 0.821, 最大: 0.958
+20251027-165330 load+conv: 0.248s, seg-postpro+nms: 0.480, draw: 0.317
+20251027-165330 2 7 / 80: 00000_06
+20251027-165330 检测到细节点数量: 22 (NMS前: 93)
+20251027-165330 细节点置信度 - 平均: 0.928, 最大: 0.985
+20251027-165331 load+conv: 0.240s, seg-postpro+nms: 0.559, draw: 0.345
+20251027-165331 2 8 / 80: 00000_07
+20251027-165332 检测到细节点数量: 13 (NMS前: 43)
+20251027-165332 细节点置信度 - 平均: 0.850, 最大: 0.963
+20251027-165332 load+conv: 0.254s, seg-postpro+nms: 0.548, draw: 0.317
+20251027-165332 2 9 / 80: 00001_00
+20251027-165333 检测到细节点数量: 35 (NMS前: 159)
+20251027-165333 细节点置信度 - 平均: 0.909, 最大: 0.987
+20251027-165333 load+conv: 0.238s, seg-postpro+nms: 0.622, draw: 0.362
+20251027-165333 2 10 / 80: 00001_01
+20251027-165334 检测到细节点数量: 37 (NMS前: 156)
+20251027-165334 细节点置信度 - 平均: 0.903, 最大: 0.989
+20251027-165335 load+conv: 0.236s, seg-postpro+nms: 0.668, draw: 0.617
+20251027-165335 2 11 / 80: 00001_02
+20251027-165335 检测到细节点数量: 34 (NMS前: 132)
+20251027-165335 细节点置信度 - 平均: 0.889, 最大: 0.980
+20251027-165336 load+conv: 0.235s, seg-postpro+nms: 0.568, draw: 0.328
+20251027-165336 2 12 / 80: 00001_03
+20251027-165337 检测到细节点数量: 34 (NMS前: 122)
+20251027-165337 细节点置信度 - 平均: 0.855, 最大: 0.980
+20251027-165337 load+conv: 0.227s, seg-postpro+nms: 0.566, draw: 0.335
+20251027-165337 2 13 / 80: 00001_04
+20251027-165338 检测到细节点数量: 32 (NMS前: 140)
+20251027-165338 细节点置信度 - 平均: 0.900, 最大: 0.983
+20251027-165338 load+conv: 0.257s, seg-postpro+nms: 0.627, draw: 0.329
+20251027-165338 2 14 / 80: 00001_05
+20251027-165339 检测到细节点数量: 34 (NMS前: 137)
+20251027-165339 细节点置信度 - 平均: 0.883, 最大: 0.983
+20251027-165339 load+conv: 0.228s, seg-postpro+nms: 0.605, draw: 0.333
+20251027-165339 2 15 / 80: 00001_06
+20251027-165340 检测到细节点数量: 36 (NMS前: 134)
+20251027-165340 细节点置信度 - 平均: 0.891, 最大: 0.983
+20251027-165341 load+conv: 0.258s, seg-postpro+nms: 0.536, draw: 0.614
+20251027-165341 2 16 / 80: 00001_07
+20251027-165341 检测到细节点数量: 30 (NMS前: 119)
+20251027-165341 细节点置信度 - 平均: 0.865, 最大: 0.979
+20251027-165342 load+conv: 0.221s, seg-postpro+nms: 0.518, draw: 0.334
+20251027-165342 2 17 / 80: 00002_00
+20251027-165343 检测到细节点数量: 27 (NMS前: 114)
+20251027-165343 细节点置信度 - 平均: 0.928, 最大: 0.989
+20251027-165343 load+conv: 0.235s, seg-postpro+nms: 0.537, draw: 0.333
+20251027-165343 2 18 / 80: 00002_01
+20251027-165344 检测到细节点数量: 31 (NMS前: 128)
+20251027-165344 细节点置信度 - 平均: 0.928, 最大: 0.990
+20251027-165344 load+conv: 0.216s, seg-postpro+nms: 0.535, draw: 0.325
+20251027-165344 2 19 / 80: 00002_02
+20251027-165345 检测到细节点数量: 41 (NMS前: 144)
+20251027-165345 细节点置信度 - 平均: 0.889, 最大: 0.989
+20251027-165345 load+conv: 0.223s, seg-postpro+nms: 0.560, draw: 0.340
+20251027-165345 2 20 / 80: 00002_03
+20251027-165346 检测到细节点数量: 30 (NMS前: 122)
+20251027-165346 细节点置信度 - 平均: 0.913, 最大: 0.987
+20251027-165346 load+conv: 0.207s, seg-postpro+nms: 0.519, draw: 0.597
+20251027-165346 2 21 / 80: 00002_04
+20251027-165347 检测到细节点数量: 35 (NMS前: 145)
+20251027-165347 细节点置信度 - 平均: 0.921, 最大: 0.989
+20251027-165348 load+conv: 0.207s, seg-postpro+nms: 0.547, draw: 0.333
+20251027-165348 2 22 / 80: 00002_05
+20251027-165348 检测到细节点数量: 35 (NMS前: 146)
+20251027-165348 细节点置信度 - 平均: 0.917, 最大: 0.990
+20251027-165349 load+conv: 0.213s, seg-postpro+nms: 0.549, draw: 0.332
+20251027-165349 2 23 / 80: 00002_06
+20251027-165349 检测到细节点数量: 28 (NMS前: 112)
+20251027-165349 细节点置信度 - 平均: 0.939, 最大: 0.990
+20251027-165350 load+conv: 0.232s, seg-postpro+nms: 0.567, draw: 0.331
+20251027-165350 2 24 / 80: 00002_07
+20251027-165351 检测到细节点数量: 36 (NMS前: 142)
+20251027-165351 细节点置信度 - 平均: 0.883, 最大: 0.989
+20251027-165351 load+conv: 0.242s, seg-postpro+nms: 0.629, draw: 0.342
+20251027-165351 2 25 / 80: 00003_00
+20251027-165352 检测到细节点数量: 27 (NMS前: 116)
+20251027-165352 细节点置信度 - 平均: 0.916, 最大: 0.987
+20251027-165352 load+conv: 0.262s, seg-postpro+nms: 0.590, draw: 0.335
+20251027-165352 2 26 / 80: 00003_01
+20251027-165353 检测到细节点数量: 25 (NMS前: 103)
+20251027-165353 细节点置信度 - 平均: 0.919, 最大: 0.986
+20251027-165354 load+conv: 0.254s, seg-postpro+nms: 0.575, draw: 0.647
+20251027-165354 2 27 / 80: 00003_02
+20251027-165354 检测到细节点数量: 34 (NMS前: 138)
+20251027-165354 细节点置信度 - 平均: 0.909, 最大: 0.989
+20251027-165355 load+conv: 0.259s, seg-postpro+nms: 0.611, draw: 0.336
+20251027-165355 2 28 / 80: 00003_03
+20251027-165356 检测到细节点数量: 27 (NMS前: 121)
+20251027-165356 细节点置信度 - 平均: 0.941, 最大: 0.988
+20251027-165356 load+conv: 0.256s, seg-postpro+nms: 0.578, draw: 0.327
+20251027-165356 2 29 / 80: 00003_04
+20251027-165357 检测到细节点数量: 25 (NMS前: 103)
+20251027-165357 细节点置信度 - 平均: 0.914, 最大: 0.985
+20251027-165357 load+conv: 0.226s, seg-postpro+nms: 0.537, draw: 0.329
+20251027-165357 2 30 / 80: 00003_05
+20251027-165358 检测到细节点数量: 24 (NMS前: 100)
+20251027-165358 细节点置信度 - 平均: 0.949, 最大: 0.988
+20251027-165358 load+conv: 0.251s, seg-postpro+nms: 0.532, draw: 0.333
+20251027-165358 2 31 / 80: 00003_06
+20251027-165359 检测到细节点数量: 22 (NMS前: 87)
+20251027-165359 细节点置信度 - 平均: 0.914, 最大: 0.984
+20251027-165400 load+conv: 0.245s, seg-postpro+nms: 0.573, draw: 0.609
+20251027-165400 2 32 / 80: 00003_07
+20251027-165400 检测到细节点数量: 28 (NMS前: 123)
+20251027-165400 细节点置信度 - 平均: 0.923, 最大: 0.986
+20251027-165401 load+conv: 0.245s, seg-postpro+nms: 0.534, draw: 0.344
+20251027-165401 2 33 / 80: 00004_00
+20251027-165402 检测到细节点数量: 22 (NMS前: 88)
+20251027-165402 细节点置信度 - 平均: 0.870, 最大: 0.980
+20251027-165402 load+conv: 0.271s, seg-postpro+nms: 0.530, draw: 0.315
+20251027-165402 2 34 / 80: 00004_01
+20251027-165403 检测到细节点数量: 28 (NMS前: 125)
+20251027-165403 细节点置信度 - 平均: 0.903, 最大: 0.982
+20251027-165403 load+conv: 0.255s, seg-postpro+nms: 0.547, draw: 0.342
+20251027-165403 2 35 / 80: 00004_02
+20251027-165404 检测到细节点数量: 23 (NMS前: 93)
+20251027-165404 细节点置信度 - 平均: 0.890, 最大: 0.981
+20251027-165404 load+conv: 0.264s, seg-postpro+nms: 0.508, draw: 0.328
+20251027-165404 2 36 / 80: 00004_03
+20251027-165405 检测到细节点数量: 27 (NMS前: 118)
+20251027-165405 细节点置信度 - 平均: 0.921, 最大: 0.983
+20251027-165406 load+conv: 0.239s, seg-postpro+nms: 0.540, draw: 0.628
+20251027-165406 2 37 / 80: 00004_04
+20251027-165406 检测到细节点数量: 25 (NMS前: 97)
+20251027-165406 细节点置信度 - 平均: 0.879, 最大: 0.975
+20251027-165407 load+conv: 0.272s, seg-postpro+nms: 0.530, draw: 0.330
+20251027-165407 2 38 / 80: 00004_05
+20251027-165407 检测到细节点数量: 24 (NMS前: 105)
+20251027-165407 细节点置信度 - 平均: 0.889, 最大: 0.978
+20251027-165408 load+conv: 0.240s, seg-postpro+nms: 0.540, draw: 0.333
+20251027-165408 2 39 / 80: 00004_06
+20251027-165409 检测到细节点数量: 30 (NMS前: 121)
+20251027-165409 细节点置信度 - 平均: 0.862, 最大: 0.979
+20251027-165409 load+conv: 0.278s, seg-postpro+nms: 0.598, draw: 0.338
+20251027-165409 2 40 / 80: 00004_07
+20251027-165410 检测到细节点数量: 25 (NMS前: 102)
+20251027-165410 细节点置信度 - 平均: 0.881, 最大: 0.978
+20251027-165410 load+conv: 0.228s, seg-postpro+nms: 0.511, draw: 0.326
+20251027-165410 2 41 / 80: 00005_00
+20251027-165411 检测到细节点数量: 22 (NMS前: 97)
+20251027-165411 细节点置信度 - 平均: 0.928, 最大: 0.989
+20251027-165411 load+conv: 0.235s, seg-postpro+nms: 0.533, draw: 0.626
+20251027-165411 2 42 / 80: 00005_01
+20251027-165412 检测到细节点数量: 22 (NMS前: 89)
+20251027-165412 细节点置信度 - 平均: 0.876, 最大: 0.976
+20251027-165413 load+conv: 0.279s, seg-postpro+nms: 0.531, draw: 0.327
+20251027-165413 2 43 / 80: 00005_02
+20251027-165413 检测到细节点数量: 27 (NMS前: 98)
+20251027-165413 细节点置信度 - 平均: 0.864, 最大: 0.986
+20251027-165414 load+conv: 0.229s, seg-postpro+nms: 0.518, draw: 0.334
+20251027-165414 2 44 / 80: 00005_03
+20251027-165414 检测到细节点数量: 17 (NMS前: 72)
+20251027-165414 细节点置信度 - 平均: 0.920, 最大: 0.982
+20251027-165415 load+conv: 0.230s, seg-postpro+nms: 0.488, draw: 0.322
+20251027-165415 2 45 / 80: 00005_04
+20251027-165415 检测到细节点数量: 26 (NMS前: 111)
+20251027-165415 细节点置信度 - 平均: 0.892, 最大: 0.980
+20251027-165416 load+conv: 0.233s, seg-postpro+nms: 0.541, draw: 0.330
+20251027-165416 2 46 / 80: 00005_05
+20251027-165417 检测到细节点数量: 23 (NMS前: 83)
+20251027-165417 细节点置信度 - 平均: 0.848, 最大: 0.981
+20251027-165417 load+conv: 0.235s, seg-postpro+nms: 0.528, draw: 0.318
+20251027-165417 2 47 / 80: 00005_06
+20251027-165418 检测到细节点数量: 20 (NMS前: 85)
+20251027-165418 细节点置信度 - 平均: 0.888, 最大: 0.976
+20251027-165418 load+conv: 0.228s, seg-postpro+nms: 0.498, draw: 0.594
+20251027-165418 2 48 / 80: 00005_07
+20251027-165419 检测到细节点数量: 22 (NMS前: 82)
+20251027-165419 细节点置信度 - 平均: 0.863, 最大: 0.981
+20251027-165419 load+conv: 0.228s, seg-postpro+nms: 0.525, draw: 0.317
+20251027-165419 2 49 / 80: 00006_00
+20251027-165420 检测到细节点数量: 36 (NMS前: 124)
+20251027-165420 细节点置信度 - 平均: 0.864, 最大: 0.985
+20251027-165420 load+conv: 0.233s, seg-postpro+nms: 0.548, draw: 0.343
+20251027-165420 2 50 / 80: 00006_01
+20251027-165421 检测到细节点数量: 25 (NMS前: 97)
+20251027-165421 细节点置信度 - 平均: 0.899, 最大: 0.987
+20251027-165421 load+conv: 0.232s, seg-postpro+nms: 0.518, draw: 0.321
+20251027-165421 2 51 / 80: 00006_02
+20251027-165422 检测到细节点数量: 22 (NMS前: 89)
+20251027-165422 细节点置信度 - 平均: 0.900, 最大: 0.987
+20251027-165423 load+conv: 0.238s, seg-postpro+nms: 0.511, draw: 0.314
+20251027-165423 2 52 / 80: 00006_03
+20251027-165423 检测到细节点数量: 24 (NMS前: 98)
+20251027-165423 细节点置信度 - 平均: 0.892, 最大: 0.986
+20251027-165424 load+conv: 0.225s, seg-postpro+nms: 0.512, draw: 0.615
+20251027-165424 2 53 / 80: 00006_04
+20251027-165425 检测到细节点数量: 25 (NMS前: 91)
+20251027-165425 细节点置信度 - 平均: 0.892, 最大: 0.985
+20251027-165425 load+conv: 0.270s, seg-postpro+nms: 0.539, draw: 0.352
+20251027-165425 2 54 / 80: 00006_05
+20251027-165426 检测到细节点数量: 31 (NMS前: 111)
+20251027-165426 细节点置信度 - 平均: 0.873, 最大: 0.988
+20251027-165426 load+conv: 0.286s, seg-postpro+nms: 0.603, draw: 0.340
+20251027-165426 2 55 / 80: 00006_06
+20251027-165427 检测到细节点数量: 32 (NMS前: 134)
+20251027-165427 细节点置信度 - 平均: 0.900, 最大: 0.979
+20251027-165427 load+conv: 0.290s, seg-postpro+nms: 0.581, draw: 0.342
+20251027-165427 2 56 / 80: 00006_07
+20251027-165428 检测到细节点数量: 31 (NMS前: 109)
+20251027-165428 细节点置信度 - 平均: 0.856, 最大: 0.988
+20251027-165429 load+conv: 0.288s, seg-postpro+nms: 0.529, draw: 0.360
+20251027-165429 2 57 / 80: 00007_00
+20251027-165430 检测到细节点数量: 16 (NMS前: 56)
+20251027-165430 细节点置信度 - 平均: 0.877, 最大: 0.974
+20251027-165430 load+conv: 0.304s, seg-postpro+nms: 0.624, draw: 0.388
+20251027-165430 2 58 / 80: 00007_01
+20251027-165431 检测到细节点数量: 21 (NMS前: 82)
+20251027-165431 细节点置信度 - 平均: 0.895, 最大: 0.981
+20251027-165432 load+conv: 0.274s, seg-postpro+nms: 0.622, draw: 0.691
+20251027-165432 2 59 / 80: 00007_02
+20251027-165432 检测到细节点数量: 19 (NMS前: 81)
+20251027-165432 细节点置信度 - 平均: 0.935, 最大: 0.987
+20251027-165433 load+conv: 0.284s, seg-postpro+nms: 0.578, draw: 0.325
+20251027-165433 2 60 / 80: 00007_03
+20251027-165434 检测到细节点数量: 22 (NMS前: 84)
+20251027-165434 细节点置信度 - 平均: 0.890, 最大: 0.981
+20251027-165434 load+conv: 0.236s, seg-postpro+nms: 0.525, draw: 0.330
+20251027-165434 2 61 / 80: 00007_04
+20251027-165435 检测到细节点数量: 24 (NMS前: 96)
+20251027-165435 细节点置信度 - 平均: 0.874, 最大: 0.982
+20251027-165435 load+conv: 0.296s, seg-postpro+nms: 0.564, draw: 0.328
+20251027-165435 2 62 / 80: 00007_05
+20251027-165436 检测到细节点数量: 16 (NMS前: 68)
+20251027-165436 细节点置信度 - 平均: 0.846, 最大: 0.962
+20251027-165436 load+conv: 0.277s, seg-postpro+nms: 0.536, draw: 0.325
+20251027-165436 2 63 / 80: 00007_06
+20251027-165437 检测到细节点数量: 20 (NMS前: 70)
+20251027-165437 细节点置信度 - 平均: 0.833, 最大: 0.981
+20251027-165438 load+conv: 0.254s, seg-postpro+nms: 0.580, draw: 0.659
+20251027-165438 2 64 / 80: 00007_07
+20251027-165438 检测到细节点数量: 17 (NMS前: 55)
+20251027-165438 细节点置信度 - 平均: 0.854, 最大: 0.985
+20251027-165439 load+conv: 0.298s, seg-postpro+nms: 0.539, draw: 0.332
+20251027-165439 2 65 / 80: 00008_00
+20251027-165440 检测到细节点数量: 19 (NMS前: 73)
+20251027-165440 细节点置信度 - 平均: 0.907, 最大: 0.979
+20251027-165440 load+conv: 0.261s, seg-postpro+nms: 0.551, draw: 0.321
+20251027-165440 2 66 / 80: 00008_01
+20251027-165441 检测到细节点数量: 20 (NMS前: 66)
+20251027-165441 细节点置信度 - 平均: 0.807, 最大: 0.966
+20251027-165441 load+conv: 0.251s, seg-postpro+nms: 0.517, draw: 0.325
+20251027-165441 2 67 / 80: 00008_02
+20251027-165442 检测到细节点数量: 17 (NMS前: 67)
+20251027-165442 细节点置信度 - 平均: 0.863, 最大: 0.959
+20251027-165442 load+conv: 0.266s, seg-postpro+nms: 0.523, draw: 0.318
+20251027-165442 2 68 / 80: 00008_03
+20251027-165443 检测到细节点数量: 14 (NMS前: 55)
+20251027-165443 细节点置信度 - 平均: 0.881, 最大: 0.969
+20251027-165443 load+conv: 0.254s, seg-postpro+nms: 0.514, draw: 0.330
+20251027-165443 2 69 / 80: 00008_04
+20251027-165444 检测到细节点数量: 22 (NMS前: 76)
+20251027-165444 细节点置信度 - 平均: 0.859, 最大: 0.974
+20251027-165445 load+conv: 0.277s, seg-postpro+nms: 0.543, draw: 0.655
+20251027-165445 2 70 / 80: 00008_05
+20251027-165446 检测到细节点数量: 15 (NMS前: 48)
+20251027-165446 细节点置信度 - 平均: 0.811, 最大: 0.966
+20251027-165446 load+conv: 0.260s, seg-postpro+nms: 0.545, draw: 0.318
+20251027-165446 2 71 / 80: 00008_06
+20251027-165447 检测到细节点数量: 19 (NMS前: 64)
+20251027-165447 细节点置信度 - 平均: 0.873, 最大: 0.972
+20251027-165447 load+conv: 0.267s, seg-postpro+nms: 0.591, draw: 0.340
+20251027-165447 2 72 / 80: 00008_07
+20251027-165448 检测到细节点数量: 15 (NMS前: 57)
+20251027-165448 细节点置信度 - 平均: 0.853, 最大: 0.967
+20251027-165448 load+conv: 0.289s, seg-postpro+nms: 0.588, draw: 0.394
+20251027-165448 2 73 / 80: 00009_00
+20251027-165449 检测到细节点数量: 22 (NMS前: 78)
+20251027-165449 细节点置信度 - 平均: 0.882, 最大: 0.982
+20251027-165450 load+conv: 0.274s, seg-postpro+nms: 0.818, draw: 0.407
+20251027-165450 2 74 / 80: 00009_01
+20251027-165451 检测到细节点数量: 21 (NMS前: 89)
+20251027-165451 细节点置信度 - 平均: 0.895, 最大: 0.984
+20251027-165451 load+conv: 0.267s, seg-postpro+nms: 0.596, draw: 0.771
+20251027-165451 2 75 / 80: 00009_02
+20251027-165452 检测到细节点数量: 22 (NMS前: 88)
+20251027-165452 细节点置信度 - 平均: 0.886, 最大: 0.982
+20251027-165453 load+conv: 0.263s, seg-postpro+nms: 0.671, draw: 0.365
+20251027-165453 2 76 / 80: 00009_03
+20251027-165454 检测到细节点数量: 18 (NMS前: 72)
+20251027-165454 细节点置信度 - 平均: 0.899, 最大: 0.987
+20251027-165454 load+conv: 0.248s, seg-postpro+nms: 0.613, draw: 0.350
+20251027-165454 2 77 / 80: 00009_04
+20251027-165455 检测到细节点数量: 24 (NMS前: 97)
+20251027-165455 细节点置信度 - 平均: 0.922, 最大: 0.984
+20251027-165455 load+conv: 0.242s, seg-postpro+nms: 0.628, draw: 0.350
+20251027-165455 2 78 / 80: 00009_05
+20251027-165456 检测到细节点数量: 25 (NMS前: 82)
+20251027-165456 细节点置信度 - 平均: 0.856, 最大: 0.980
+20251027-165457 load+conv: 0.256s, seg-postpro+nms: 0.690, draw: 0.385
+20251027-165457 2 79 / 80: 00009_06
+20251027-165457 检测到细节点数量: 19 (NMS前: 78)
+20251027-165457 细节点置信度 - 平均: 0.857, 最大: 0.981
+20251027-165458 load+conv: 0.243s, seg-postpro+nms: 0.640, draw: 0.652
+20251027-165458 2 80 / 80: 00009_07
+20251027-165459 检测到细节点数量: 19 (NMS前: 83)
+20251027-165459 细节点置信度 - 平均: 0.885, 最大: 0.970
+20251027-165459 load+conv: 0.331s, seg-postpro+nms: 0.637, draw: 0.348
+20251027-165459 Average: load+conv: 0.260s, oir-select+seg-post+nms: 0.559, draw: 0.393
+20251027-165459 处理数据集 3: ../datasets/NIST4/
+20251027-165459 Predicting 3:
+20251027-165508 3 1 / 1: F0001_01
+20251027-165511 检测到细节点数量: 125 (NMS前: 431)
+20251027-165511 细节点置信度 - 平均: 0.829, 最大: 0.990
+20251027-165512 load+conv: 1.866s, seg-postpro+nms: 1.433, draw: 1.047
+20251027-165512 Average: load+conv: 1.866s, oir-select+seg-post+nms: 1.433, draw: 1.047
+20251027-165512 处理数据集 4: ../datasets/NIST14/
+20251027-165512 Predicting 4:
+20251027-165520 4 1 / 1: F0000001
+20251027-165525 检测到细节点数量: 156 (NMS前: 672)
+20251027-165525 细节点置信度 - 平均: 0.908, 最大: 0.986
+20251027-165527 load+conv: 2.991s, seg-postpro+nms: 2.727, draw: 2.079
+20251027-165527 Average: load+conv: 2.991s, oir-select+seg-post+nms: 2.727, draw: 2.079
+20251027-165527 ============================================================
+20251027-165527 FingerNet 处理完成
+20251027-165527 ============================================================
