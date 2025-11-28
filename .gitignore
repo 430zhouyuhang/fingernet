@@ -1,4 +1,2 @@
-     # Ignore output directory
-     ./FingerNet-master/output/
-     # Ignore datasets directory
-     ./FingerNet-master/datasets/
+FingerNet-master/output/
+FingerNet-master/datasets/
