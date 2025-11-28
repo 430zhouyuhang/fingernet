@@ -8,9 +8,8 @@ import cv2
 import numpy as np
 import os
 import pickle
-import json
-from typing import List, Tuple, Dict, Optional
-from dataclasses import dataclass, asdict
+from typing import List, Tuple, Dict, Optional, Any
+from dataclasses import dataclass, field
 import matplotlib
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.pyplot as plt
@@ -50,6 +49,7 @@ class MatchResult:
     transform_matrix: np.ndarray  # 变换矩阵
     matched_pairs: List[Tuple[int, int]]  # 匹配对
     inlier_ratio: float  # 内点比例
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class TemplateMatcher:
@@ -61,8 +61,10 @@ class TemplateMatcher:
                  distance_tolerance: float = 15.0,
                  angle_tolerance: float = 30.0,  # 度
                  orientation_tolerance: float = 30.0,  # 度
-                 max_distance: float = 50.0,
-                 match_threshold: float = 0.65):  # 平衡的默认阈值
+                 max_distance: float = 40.0,  # 减小距离容差，提高匹配精度
+                 match_threshold: float = 0.65,  # 平衡的默认阈值
+                 ransac_runs: int = 3,  # RANSAC运行次数，多次运行取最佳结果以提高稳定性
+                 templates_per_finger: int = 1):  # 每个手指用于模板的样本数量（固定 enrollment）
         """
         初始化模板匹配器
         
@@ -74,6 +76,8 @@ class TemplateMatcher:
             orientation_tolerance: 方向容差（度）
             max_distance: RANSAC中最大匹配距离（像素）
             match_threshold: 模板匹配阈值
+            ransac_runs: RANSAC运行次数，多次运行取最佳结果以提高稳定性（默认: 3）
+            templates_per_finger: 每个手指用于模板的样本数量（固定 enrollment，默认: 1）
         """
         self.k_neighbors = k_neighbors
         self.template_radius = template_radius
@@ -82,15 +86,12 @@ class TemplateMatcher:
         self.orientation_tolerance = np.radians(orientation_tolerance)
         self.max_distance = max_distance
         self.match_threshold = match_threshold
+        self.ransac_runs = ransac_runs  # RANSAC运行次数
+        self.templates_per_finger = max(1, templates_per_finger)
     
     def _calculate_angle_difference(self, angle1: float, angle2: float) -> float:
         """计算两个角度之间的最小差值（考虑角度环绕）"""
         diff = abs(angle1 - angle2)
-        return min(diff, 2 * np.pi - diff)
-    
-    def _calculate_orientation_difference(self, ori1: float, ori2: float) -> float:
-        """计算两个方向角之间的最小角度差"""
-        diff = abs(ori1 - ori2)
         return min(diff, 2 * np.pi - diff)
     
     def build_local_template(self,
@@ -150,7 +151,7 @@ class TemplateMatcher:
             angles.append(relative_angle)
             
             # 方向差
-            ori_diff = self._calculate_orientation_difference(
+            ori_diff = self._calculate_angle_difference(
                 center_minutia.orientation,
                 neighbor.orientation
             )
@@ -194,10 +195,10 @@ class TemplateMatcher:
         3. 考虑邻居的相对顺序
         
         Args:
-            template1: 第一个模板
-            template2: 第二个模板
-            minutiae1: 第一组细节点
-            minutiae2: 第二组细节点
+            template1: 第一个局部模板
+            template2: 第二个局部模板
+            minutiae1: 第一组细节点，用于查找邻居坐标和方向
+            minutiae2: 第二组细节点，用于查找邻居坐标和方向
             
         Returns:
             匹配相似度 (0-1)
@@ -271,7 +272,7 @@ class TemplateMatcher:
                     continue
                 
                 # 邻居方向相似度（放宽约束）
-                neighbor_ori_diff = self._calculate_orientation_difference(
+                neighbor_ori_diff = self._calculate_angle_difference(
                     f1['neighbor_ori'], f2['neighbor_ori']
                 )
                 if neighbor_ori_diff > self.orientation_tolerance * 1.2:  # 放宽20%
@@ -313,14 +314,14 @@ class TemplateMatcher:
         # 考虑匹配比例
         match_ratio = len(matched_pairs) / max(k1, k2)
         
-        # 综合相似度：平均分数 * 匹配比例（放宽要求）
+        # 一局部模板的综合相似度：平均分数 * 匹配比例（放宽要求）
         similarity = avg_score * (0.7 + 0.3 * match_ratio)  # 即使匹配比例低也给予一定分数
         
         # 放宽惩罚：匹配比例低于40%才降低相似度
         if match_ratio < 0.4:  # 匹配比例低于40%
             similarity *= match_ratio / 0.4
         
-        return min(1.0, similarity)
+        return similarity
     
     def find_template_matches(self,
                              templates1: List[LocalTemplate],
@@ -361,7 +362,7 @@ class TemplateMatcher:
                     continue
                 
                 # 检查中心点的方向一致性（放宽到100%容差）
-                ori_diff = self._calculate_orientation_difference(
+                ori_diff = self._calculate_angle_difference(
                     minutiae1[i].orientation,
                     minutiae2[j].orientation
                 )
@@ -385,7 +386,7 @@ class TemplateMatcher:
                               minutiae2: List[Minutia],
                               matches: List[Tuple[int, int, float]]) -> MatchResult:
         """
-        使用RANSAC进行几何验证
+        使用RANSAC进行几何验证（多次运行取最佳结果以提高稳定性）
         
         Args:
             minutiae1: 第一组细节点
@@ -402,159 +403,194 @@ class TemplateMatcher:
         pts1 = np.array([[minutiae1[i].x, minutiae1[i].y] for i, _, _ in matches])
         pts2 = np.array([[minutiae2[j].x, minutiae2[j].y] for _, j, _ in matches])
         
-        # RANSAC参数
-        inlier_threshold = self.max_distance
-        estimated_inlier_ratio = 0.3
+        # 多次运行RANSAC，取最佳结果以提高稳定性
+        best_overall_result = None
+        best_overall_score = -1.0
         
-        # 计算最大迭代次数，避免log(0)或log(负数)的问题
-        if estimated_inlier_ratio > 0 and estimated_inlier_ratio < 1:
-            try:
-                max_iterations = min(1000, max(100, int(np.log(0.01) / np.log(1 - estimated_inlier_ratio**3))))
-            except (ValueError, ZeroDivisionError):
+        for run in range(self.ransac_runs):
+            # RANSAC参数
+            inlier_threshold = self.max_distance
+            estimated_inlier_ratio = 0.3
+            
+            # 计算最大迭代次数，避免log(0)或log(负数)的问题
+            if estimated_inlier_ratio > 0 and estimated_inlier_ratio < 1:
+                try:
+                    max_iterations = min(1000, max(100, int(np.log(0.01) / np.log(1 - estimated_inlier_ratio**3))))
+                except (ValueError, ZeroDivisionError):
+                    max_iterations = 500  # 默认值
+            else:
                 max_iterations = 500  # 默认值
-        else:
-            max_iterations = 500  # 默认值
-        
-        min_inliers_for_early_stop = max(3, len(matches) // 4)
-        
-        best_transform = None
-        best_inliers = 0
-        best_inlier_indices = []
-        
-        for iteration in range(max_iterations):
-            if len(matches) < 3:
-                break
             
-            # 随机选择3个点
-            sample_indices = np.random.choice(len(matches), 3, replace=False)
-            sample_pts1 = pts1[sample_indices]
-            sample_pts2 = pts2[sample_indices]
+            # 改进的提前停止条件：更严格，避免过早停止导致结果不稳定
+            min_inliers_for_early_stop = max(5, len(matches) // 3)  # 提高最小内点数要求
+            min_iterations_before_stop = max(50, int(max_iterations * 0.3))  # 至少运行30%的迭代次数
+            early_stop_inlier_ratio = 0.75  # 提高内点比例要求到75%（更严格）
+            consecutive_good_iterations = 0  # 连续满足条件的迭代次数
+            required_consecutive = 3  # 要求连续3次满足条件才停止
             
-            # 检查采样点的方向一致性
-            orientation_ok = True
-            for idx in sample_indices:
-                match_idx1, match_idx2 = matches[idx][0], matches[idx][1]
-                ori_diff = self._calculate_orientation_difference(
-                    minutiae1[match_idx1].orientation,
-                    minutiae2[match_idx2].orientation
-                )
-                if ori_diff > self.orientation_tolerance:
-                    orientation_ok = False
+            best_transform = None
+            best_inliers = 0
+            best_inlier_indices = []
+            
+            for iteration in range(max_iterations):
+                if len(matches) < 3:
                     break
-            
-            if not orientation_ok:
-                continue
-            
-            try:
-                # 估计仿射变换
-                transform = cv2.getAffineTransform(
-                    sample_pts1.astype(np.float32),
-                    sample_pts2.astype(np.float32)
-                )
                 
-                # 计算内点
-                ones = np.ones((len(pts1), 1))
-                pts1_homo = np.hstack([pts1, ones])
-                transform_3x3 = np.vstack([transform, [0, 0, 1]])
-                transformed_pts1 = np.dot(pts1_homo, transform_3x3.T)[:, :2]
+                # 随机选择3个点
+                sample_indices = np.random.choice(len(matches), 3, replace=False)
+                sample_pts1 = pts1[sample_indices]
+                sample_pts2 = pts2[sample_indices]
                 
-                distances = np.linalg.norm(transformed_pts1 - pts2, axis=1)
-                geometric_inliers = np.where(distances < inlier_threshold)[0]
-                
-                # 进一步检查方向一致性
-                orientation_inliers = []
-                for idx in geometric_inliers:
+                # 检查采样点的方向一致性
+                orientation_ok = True
+                for idx in sample_indices:
                     match_idx1, match_idx2 = matches[idx][0], matches[idx][1]
-                    ori_diff = self._calculate_orientation_difference(
+                    ori_diff = self._calculate_angle_difference(
                         minutiae1[match_idx1].orientation,
                         minutiae2[match_idx2].orientation
                     )
-                    if ori_diff <= self.orientation_tolerance:
-                        orientation_inliers.append(idx)
+                    if ori_diff > self.orientation_tolerance:
+                        orientation_ok = False
+                        break
                 
-                inlier_indices = np.array(orientation_inliers)
+                if not orientation_ok:
+                    consecutive_good_iterations = 0  # 重置连续计数
+                    continue
                 
-                # 更新最佳结果
-                if len(inlier_indices) > best_inliers:
-                    best_inliers = len(inlier_indices)
-                    best_inlier_indices = inlier_indices
-                    best_transform = transform
+                try:
+                    # 估计仿射变换
+                    transform = cv2.getAffineTransform(
+                        sample_pts1.astype(np.float32),
+                        sample_pts2.astype(np.float32)
+                    )
                     
-                    # 早期终止
-                    if best_inliers >= min_inliers_for_early_stop:
+                    # 计算内点
+                    ones = np.ones((len(pts1), 1))
+                    pts1_homo = np.hstack([pts1, ones])
+                    transform_3x3 = np.vstack([transform, [0, 0, 1]])
+                    transformed_pts1 = np.dot(pts1_homo, transform_3x3.T)[:, :2]
+                    
+                    distances = np.linalg.norm(transformed_pts1 - pts2, axis=1)
+                    geometric_inliers = np.where(distances < inlier_threshold)[0]
+                    
+                    # 进一步检查方向一致性
+                    orientation_inliers = []
+                    for idx in geometric_inliers:
+                        match_idx1, match_idx2 = matches[idx][0], matches[idx][1]
+                        ori_diff = self._calculate_angle_difference(
+                            minutiae1[match_idx1].orientation,
+                            minutiae2[match_idx2].orientation
+                        )
+                        if ori_diff <= self.orientation_tolerance:
+                            orientation_inliers.append(idx)
+                    
+                    inlier_indices = np.array(orientation_inliers)
+                    
+                    # 更新本次运行的最佳结果
+                    if len(inlier_indices) > best_inliers:
+                        best_inliers = len(inlier_indices)
+                        best_inlier_indices = inlier_indices
+                        best_transform = transform
+                    
+                    # 改进的提前停止条件：更严格，避免过早停止
+                    # 1. 至少运行一定比例的迭代次数
+                    # 2. 内点数达到要求
+                    # 3. 内点比例达到更高要求（75%）
+                    # 4. 连续多次满足条件（提高稳定性）
+                    if iteration >= min_iterations_before_stop and best_inliers >= min_inliers_for_early_stop:
                         current_inlier_ratio = best_inliers / len(matches)
-                        if current_inlier_ratio > 0.5:
-                            break
+                        if current_inlier_ratio >= early_stop_inlier_ratio:
+                            consecutive_good_iterations += 1
+                            # 连续多次满足条件才停止，避免偶然的好结果导致过早停止
+                            if consecutive_good_iterations >= required_consecutive:
+                                break
+                        else:
+                            consecutive_good_iterations = 0  # 不满足条件，重置计数
+                    else:
+                        consecutive_good_iterations = 0  # 不满足条件，重置计数
+                
+                except:
+                    continue
             
-            except:
-                continue
-        
-        # 计算匹配分数（平衡版本）
-        if best_transform is not None and best_inliers > 0:
-            inlier_ratio = best_inliers / len(matches)
-            
-            # 放宽要求：至少2个内点即可
-            if best_inliers < 2:
-                return MatchResult(0.0, 0, np.eye(3), [], 0.0)
-            
-            # 放宽内点比例要求到20%
-            if inlier_ratio < 0.2:
-                return MatchResult(0.0, 0, np.eye(3), [], 0.0)
-            
-            # 计算变换矩阵的质量（检查是否合理）
-            # 检查缩放因子（放宽范围）
-            scale_x = np.sqrt(best_transform[0, 0]**2 + best_transform[1, 0]**2)
-            scale_y = np.sqrt(best_transform[0, 1]**2 + best_transform[1, 1]**2)
-            
-            # 缩放因子应该在合理范围内（放宽到0.3-3.0）
-            if scale_x < 0.3 or scale_x > 3.0 or scale_y < 0.3 or scale_y > 3.0:
-                return MatchResult(0.0, 0, np.eye(3), [], 0.0)
-            
-            # 改进的分数计算（更平衡）
-            # 1. 内点比例
-            inlier_score = inlier_ratio
-            
-            # 2. 匹配数量因子（降低要求：10个内点为满分）
-            num_factor = min(1.0, best_inliers / 10.0)
-            
-            # 3. 内点分布质量（放宽检查）
-            inlier_pts1 = pts1[best_inlier_indices]
-            inlier_pts2 = pts2[best_inlier_indices]
-            
-            # 计算内点之间的平均距离（放宽到15像素）
-            if len(inlier_pts1) > 1:
-                distances_inlier = np.linalg.norm(
-                    inlier_pts1 - np.mean(inlier_pts1, axis=0), axis=1
-                )
-                avg_spread = np.mean(distances_inlier)
-                # 放宽分布要求
-                if avg_spread < 15.0:  # 平均分布半径小于15像素
-                    spread_factor = avg_spread / 15.0
+            # 计算本次运行的匹配分数
+            if best_transform is not None and best_inliers > 0:
+                inlier_ratio = best_inliers / len(matches)
+                
+                # 提高要求：至少5个内点（减少false positive）
+                if best_inliers < 5:
+                    continue  # 本次运行失败，继续下一次运行
+                
+                # 提高内点比例要求到30%（收紧几何验证条件）
+                if inlier_ratio < 0.3:
+                    continue  # 本次运行失败，继续下一次运行
+                
+                # 计算变换矩阵的质量（检查是否合理）
+                # 检查缩放因子（放宽范围）
+                scale_x = np.sqrt(best_transform[0, 0]**2 + best_transform[1, 0]**2)
+                scale_y = np.sqrt(best_transform[0, 1]**2 + best_transform[1, 1]**2)
+                
+                # 缩放因子应该在合理范围内（放宽到0.3-3.0）
+                if scale_x < 0.3 or scale_x > 3.0 or scale_y < 0.3 or scale_y > 3.0:
+                    continue  # 本次运行失败，继续下一次运行
+                
+                # 改进的分数计算（更平衡）
+                # 1. 内点比例
+                inlier_score = inlier_ratio
+                
+                # 2. 匹配数量因子（降低要求：10个内点为满分）
+                num_factor = min(1.0, best_inliers / 10.0)
+                
+                # 3. 内点分布质量（放宽检查）
+                inlier_pts1 = pts1[best_inlier_indices]
+                inlier_pts2 = pts2[best_inlier_indices]
+                
+                # 计算内点之间的平均距离（放宽到15像素）
+                if len(inlier_pts1) > 1:
+                    distances_inlier = np.linalg.norm(
+                        inlier_pts1 - np.mean(inlier_pts1, axis=0), axis=1
+                    )
+                    avg_spread = np.mean(distances_inlier)
+                    # 放宽分布要求
+                    if avg_spread < 15.0:  # 平均分布半径小于15像素
+                        spread_factor = avg_spread / 15.0
+                    else:
+                        spread_factor = 1.0
                 else:
-                    spread_factor = 1.0
-            else:
-                spread_factor = 0.7  # 放宽单个内点的惩罚
-            
-            # 综合分数（更平衡的权重）
-            score = (inlier_score * 0.6 + num_factor * 0.25 + spread_factor * 0.15)
-            
-            # 放宽惩罚：内点比例低于30%才降低分数
-            if inlier_ratio < 0.3:
-                score *= (0.7 + 0.3 * inlier_ratio / 0.3)  # 更温和的惩罚
-            
-            # 转换为3x3齐次变换矩阵
-            transform_3x3 = np.eye(3)
-            transform_3x3[:2, :] = best_transform
-            
-            matched_pairs = [(matches[i][0], matches[i][1]) for i in best_inlier_indices]
-            
-            return MatchResult(
-                score=min(1.0, score),
-                num_matches=best_inliers,
-                transform_matrix=transform_3x3,
-                matched_pairs=matched_pairs,
-                inlier_ratio=inlier_ratio
-            )
+                    spread_factor = 0.7  # 放宽单个内点的惩罚
+                
+                # 综合分数（更平衡的权重）
+                score = (inlier_score * 0.6 + num_factor * 0.25 + spread_factor * 0.15)
+                
+                # 放宽惩罚：内点比例低于30%才降低分数
+                if inlier_ratio < 0.3:
+                    score *= (0.7 + 0.3 * inlier_ratio / 0.3)  # 更温和的惩罚
+                
+                # 转换为3x3齐次变换矩阵
+                transform_3x3 = np.eye(3)
+                transform_3x3[:2, :] = best_transform
+                
+                matched_pairs = [(matches[i][0], matches[i][1]) for i in best_inlier_indices]
+                
+                # 创建本次运行的结果
+                run_result = MatchResult(
+                    score=min(1.0, score),
+                    num_matches=best_inliers,
+                    transform_matrix=transform_3x3,
+                    matched_pairs=matched_pairs,
+                    inlier_ratio=inlier_ratio
+                )
+                
+                # 保留最佳结果（按分数和内点数综合判断）
+                # 优先考虑分数，如果分数相同则考虑内点数
+                result_score = run_result.score
+                if result_score > best_overall_score or \
+                   (result_score == best_overall_score and best_inliers > (best_overall_result.num_matches if best_overall_result else 0)):
+                    best_overall_score = result_score
+                    best_overall_result = run_result
+        
+        # 返回多次运行中的最佳结果
+        if best_overall_result is not None:
+            return best_overall_result
         else:
             return MatchResult(0.0, 0, np.eye(3), [], 0.0)
     
@@ -578,66 +614,6 @@ class TemplateMatcher:
         
         return minutiae
     
-    def save_template(self, templates: List[LocalTemplate], minutiae: List[Minutia], 
-                     template_file: str, metadata: Optional[Dict] = None):
-        """
-        保存模板到文件
-        
-        Args:
-            templates: 模板列表
-            minutiae: 细节点列表（用于重建模板）
-            template_file: 保存路径
-            metadata: 可选的元数据（如指纹ID等）
-        """
-        try:
-            # 准备保存的数据
-            save_data = {
-                'templates': templates,
-                'minutiae': minutiae,
-                'metadata': metadata or {},
-                'matcher_params': {
-                    'k_neighbors': self.k_neighbors,
-                    'template_radius': self.template_radius,
-                    'distance_tolerance': self.distance_tolerance,
-                    'angle_tolerance': np.degrees(self.angle_tolerance),
-                    'orientation_tolerance': np.degrees(self.orientation_tolerance),
-                    'max_distance': self.max_distance,
-                    'match_threshold': self.match_threshold
-                }
-            }
-            
-            # 使用pickle保存（支持numpy数组）
-            with open(template_file, 'wb') as f:
-                pickle.dump(save_data, f)
-            
-            print(f"模板已保存到: {template_file}")
-        except Exception as e:
-            print(f"保存模板失败: {e}")
-    
-    def load_template(self, template_file: str) -> Tuple[List[LocalTemplate], List[Minutia], Dict]:
-        """
-        从文件加载模板
-        
-        Args:
-            template_file: 模板文件路径
-            
-        Returns:
-            (templates, minutiae, metadata)
-        """
-        try:
-            with open(template_file, 'rb') as f:
-                save_data = pickle.load(f)
-            
-            templates = save_data['templates']
-            minutiae = save_data['minutiae']
-            metadata = save_data.get('metadata', {})
-            
-            print(f"模板已从 {template_file} 加载")
-            return templates, minutiae, metadata
-        except Exception as e:
-            print(f"加载模板失败: {e}")
-            return [], [], {}
-    
     def save_multi_template(self,
                            template_file: str,
                            multi_templates: List[Tuple[List[LocalTemplate], List[Minutia]]],
@@ -655,7 +631,6 @@ class TemplateMatcher:
         try:
             save_data = {
                 'multi_templates': multi_templates,  # 多个模板
-                'num_samples': len(multi_templates),  # 样本数量
                 'sample_ids': sample_ids or [],  # 样本ID列表
                 'metadata': metadata or {},
                 'matcher_params': {
@@ -665,7 +640,8 @@ class TemplateMatcher:
                     'angle_tolerance': np.degrees(self.angle_tolerance),
                     'orientation_tolerance': np.degrees(self.orientation_tolerance),
                     'max_distance': self.max_distance,
-                    'match_threshold': self.match_threshold
+                    'match_threshold': self.match_threshold,
+                    'templates_per_finger': self.templates_per_finger
                 }
             }
             
@@ -691,21 +667,13 @@ class TemplateMatcher:
             with open(template_file, 'rb') as f:
                 save_data = pickle.load(f)
             
-            # 兼容单模板格式
-            if 'multi_templates' in save_data:
-                multi_templates = save_data['multi_templates']
-            else:
-                # 旧格式：单模板，转换为多模板格式
-                templates = save_data['templates']
-                minutiae = save_data['minutiae']
-                multi_templates = [(templates, minutiae)]
-            
+            # 统一使用多模板格式
+            multi_templates = save_data.get('multi_templates', [])
             metadata = save_data.get('metadata', {})
-            num_samples = save_data.get('num_samples', len(multi_templates))
             sample_ids = save_data.get('sample_ids', [])  # 样本ID列表
             
             if verbose:
-                print(f"多模板已从 {template_file} 加载 (包含 {num_samples} 个样本)")
+                print(f"多模板已从 {template_file} 加载 (包含 {len(multi_templates)} 个样本)")
             return multi_templates, metadata, sample_ids
         except Exception as e:
             if verbose:
@@ -736,68 +704,70 @@ class TemplateMatcher:
         # 为查询指纹构建模板
         query_templates = self.compute_templates(query_minutiae)
         
-        # 如果是多模板，与所有模板匹配并取最佳结果
-        if len(multi_templates) > 1:
-            best_result = None
-            best_score = -1.0
-            
-            for idx, (stored_templates, stored_minutiae) in enumerate(multi_templates):
-                if len(stored_templates) == 0:
-                    continue
-                
-                # 如果提供了要排除的样本ID，检查当前模板是否对应该样本
-                if exclude_query_sample_id is not None and len(sample_ids) > idx:
-                    if sample_ids[idx] == exclude_query_sample_id:
-                        continue  # 跳过这个模板，避免自己匹配自己
-                
-                # 如果没有样本ID信息，使用位置距离作为后备方案
-                if exclude_query_sample_id is not None and (len(sample_ids) == 0 or idx >= len(sample_ids)):
-                    # 后备检查：如果细节点数量相同且位置非常接近，可能是同一个样本
-                    if len(query_minutiae) == len(stored_minutiae):
-                        positions1 = np.array([[m.x, m.y] for m in query_minutiae])
-                        positions2 = np.array([[m.x, m.y] for m in stored_minutiae])
-                        if len(positions1) > 0 and len(positions2) > 0:
-                            distances = cdist(positions1, positions2)
-                            min_distances = np.min(distances, axis=1)
-                            avg_min_distance = np.mean(min_distances)
-                            # 如果平均最小距离很小（<3像素），可能是同一个样本
-                            if avg_min_distance < 3.0:
-                                continue  # 跳过这个模板
-                
-                # 模板匹配
-                matches = self.find_template_matches(stored_templates, query_templates, 
-                                                    stored_minutiae, query_minutiae)
-                
-                if len(matches) == 0:
-                    continue
-                
-                # 几何验证
-                result = self.geometric_verification(stored_minutiae, query_minutiae, matches)
-                
-                # 保留最佳结果
-                if result.score > best_score:
-                    best_score = result.score
-                    best_result = result
-            
-            return best_result if best_result is not None else MatchResult(0.0, 0, np.eye(3), [], 0.0)
-        else:
-            # 单模板匹配（向后兼容）
-            stored_templates, stored_minutiae = multi_templates[0]
-            
+        # 统一处理：与所有模板匹配并取最佳结果（单模板和多模板统一处理）
+        best_result = None
+        best_score = -1.0
+        best_metadata: Dict[str, Any] = {}
+        
+        for idx, (stored_templates, stored_minutiae) in enumerate(multi_templates):
             if len(stored_templates) == 0:
-                return MatchResult(0.0, 0, np.eye(3), [], 0.0)
+                continue
+            
+            # 如果提供了要排除的样本ID，检查当前模板是否对应该样本
+            if exclude_query_sample_id is not None and len(sample_ids) > idx:
+                if sample_ids[idx] == exclude_query_sample_id:
+                    continue  # 跳过这个模板，避免自己匹配自己
             
             # 模板匹配
             matches = self.find_template_matches(stored_templates, query_templates, 
                                                 stored_minutiae, query_minutiae)
             
             if len(matches) == 0:
-                return MatchResult(0.0, 0, np.eye(3), [], 0.0)
+                continue
             
             # 几何验证
             result = self.geometric_verification(stored_minutiae, query_minutiae, matches)
             
-            return result
+            # 保留最佳结果（优先考虑分数，如果分数相同则考虑内点数）
+            should_update = False
+            if result.score > best_score:
+                should_update = True
+            elif result.score == best_score and result.score > 0.0:
+                # 如果分数相同且都大于0，选择内点数更多的
+                if best_result is None or result.num_matches > best_result.num_matches:
+                    should_update = True
+            elif result.score > 0.0 and best_score <= 0.0:
+                # 如果当前结果分数>0，而之前的最佳结果是0，则更新
+                should_update = True
+            
+            if should_update:
+                best_score = result.score
+                best_result = result
+                best_metadata = {
+                    'stored_index': idx,
+                    'stored_sample_id': sample_ids[idx] if len(sample_ids) > idx else None,
+                    'finger_id': metadata.get('finger_id')
+                }
+        
+        if best_result is not None:
+            best_result.metadata = best_metadata
+            return best_result
+        
+        # 如果所有匹配都失败，仍然返回一个结果，但metadata中记录第一个尝试匹配的样本（如果有）
+        # 这样可以确保可视化时能显示参考图像
+        if len(multi_templates) > 0 and len(sample_ids) > 0:
+            # 找到第一个非排除的样本作为参考
+            for idx in range(len(multi_templates)):
+                if exclude_query_sample_id is None or (len(sample_ids) > idx and sample_ids[idx] != exclude_query_sample_id):
+                    return MatchResult(
+                        0.0, 0, np.eye(3), [], 0.0,
+                        metadata={
+                            'stored_index': idx,
+                            'stored_sample_id': sample_ids[idx] if len(sample_ids) > idx else None,
+                            'finger_id': metadata.get('finger_id')
+                        }
+                    )
+        return MatchResult(0.0, 0, np.eye(3), [], 0.0)
     
     def match_fingerprints(self,
                           minutiae1: List[Minutia],
@@ -824,7 +794,6 @@ class TemplateMatcher:
         
         # 几何验证
         result = self.geometric_verification(minutiae1, minutiae2, matches)
-        
         return result
     
     def is_match_successful(self, score: float, threshold: Optional[float] = None) -> bool:
@@ -863,9 +832,13 @@ class TemplateMatcher:
                          image2: np.ndarray,
                          minutiae2: List[Minutia],
                          result: MatchResult,
-                         save_path: Optional[str] = None):
+                         save_path: Optional[str] = None,
+                         image1_label: Optional[str] = None,
+                         image2_label: Optional[str] = None):
         """可视化匹配结果"""
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+        label1 = image1_label or '指纹1'
+        label2 = image2_label or '指纹2'
         
         # 显示第一个指纹
         ax1.imshow(image1, cmap='gray')
@@ -876,7 +849,7 @@ class TemplateMatcher:
                     10 * np.cos(mnt.orientation),
                     10 * np.sin(mnt.orientation),
                     head_width=3, head_length=2, fc=color, ec=color)
-        ax1.set_title(f'指纹1 (匹配: {len(result.matched_pairs)})')
+        ax1.set_title(f'{label1} (匹配: {len(result.matched_pairs)})')
         ax1.axis('off')
         
         # 显示第二个指纹
@@ -888,10 +861,10 @@ class TemplateMatcher:
                     10 * np.cos(mnt.orientation),
                     10 * np.sin(mnt.orientation),
                     head_width=3, head_length=2, fc=color, ec=color)
-        ax2.set_title(f'指纹2 (匹配: {len(result.matched_pairs)})')
+        ax2.set_title(f'{label2} (匹配: {len(result.matched_pairs)})')
         ax2.axis('off')
         
-        plt.suptitle(f'匹配分数: {result.score:.2f}, 内点比例: {result.inlier_ratio:.2f}')
+        plt.suptitle(f'{label1} vs {label2}\n匹配分数: {result.score:.2f}, 内点比例: {result.inlier_ratio:.2f}')
         plt.tight_layout()
         
         if save_path:
@@ -911,17 +884,18 @@ def demo_matching():
         angle_tolerance=30.0,  # 角度容差30度
         orientation_tolerance=30.0,  # 方向容差30度
         max_distance=50.0,  # RANSAC最大距离50像素
-        match_threshold=0.65  # 模板匹配阈值0.65（与默认值一致）
+        match_threshold=0.65,  # 模板匹配阈值0.65（与默认值一致）
+        templates_per_finger=1
     )
     
-    print("指纹模板匹配演示（适用于手机解锁）")
+    print("指纹模板匹配演示")
     print("="*50)
     
     # 示例用法
-    image1_path = '../datasets/db4_b/00002_02.bmp'
-    image2_path = '../datasets/db4_b/00002_05.bmp'
-    mnt1_path = '../output/20251027-172033/2/00002_02.mnt'
-    mnt2_path = '../output/20251027-172033/2/00002_05.mnt'
+    image1_path = '../datasets/fvc2004_DB1_B/101_7.tif'
+    image2_path = '../datasets/fvc2004_DB1_B/101_3.tif'
+    mnt1_path = '../output/20251125-155019/fvc2004_DB1_B/101_7.mnt'
+    mnt2_path = '../output/20251125-155019/fvc2004_DB1_B/101_3.mnt'
     
     # 检查文件是否存在
     for path in [image1_path, image2_path, mnt1_path, mnt2_path]:
@@ -968,7 +942,16 @@ def demo_matching():
     
     # 可视化
     print("\n正在生成匹配结果可视化图片...")
-    matcher.visualize_matches(image1, minutiae1, image2, minutiae2, result, 'match_result.png')
+    matcher.visualize_matches(
+        image1,
+        minutiae1,
+        image2,
+        minutiae2,
+        result,
+        'match_result.png',
+        image1_label=os.path.basename(image1_path),
+        image2_label=os.path.basename(image2_path)
+    )
     print("匹配结果已保存为 match_result.png")
 
 

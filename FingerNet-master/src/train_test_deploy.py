@@ -18,7 +18,25 @@ parser.add_argument('GPU',  type=str, nargs='?', default='0',
 parser.add_argument('mode', type=str, nargs='?', default='train',
                     choices=['train', 'test', 'deploy'],
                     help='train, test or deploy')
+parser.add_argument('--image_format', type=str, default=None,
+                    help='图像格式（如.bmp, .png, .jpg），None表示自动检测')
+parser.add_argument('--train_set', type=str, nargs='+', default=['../datasets/CISL24218/'],
+                    help='训练数据集路径列表')
+parser.add_argument('--train_sample_rate', type=float, nargs='+', default=None,
+                    help='训练数据集采样率列表，None表示不采样')
+parser.add_argument('--test_set', type=str, nargs='+', default=['../datasets/NISTSD27/'],
+                    help='测试数据集路径列表')
+parser.add_argument('--deploy_set', type=str, nargs='+', 
+                    default=['../datasets/out_collect/DB1_A/denoised1','../datasets/out_collect/DB2_A/denoised2','../datasets/out_collect/DB3_A/denoised3','../datasets/out_collect/DB4_A/denoised4'],
+                    help='部署数据集路径列表')
+parser.add_argument('--pretrain', type=str, default='../models/released_version/Model.model',
+                    help='预训练模型路径')
+parser.add_argument('--output_dir', type=str, default=None,
+                    help='输出目录，None表示使用时间戳自动生成')
 args = parser.parse_args()
+
+# 支持的图像格式列表（按优先级排序）
+SUPPORTED_IMAGE_FORMATS = ['.bmp', '.png', '.jpg', '.jpeg', '.tiff', '.tif']
 
 # ===== 4) 在导入 TensorFlow 之前设置可见 GPU =====
 if args.GPU.strip().lower() == 'cpu':
@@ -73,13 +91,15 @@ batch_size = 2
 use_multiprocessing = False
 
 # 数据集与输出
-train_set = ['../datasets/CISL24218/',]
-train_sample_rate = None
-test_set = ['../datasets/NISTSD27/',]
-deploy_set = ['../datasets/NISTSD27/images/','../datasets/CISL24218/', 
-            '../datasets/db4_b/','../datasets/NIST4/','../datasets/NIST14/']
-pretrain = '../models/released_version/Model.model'
-output_dir = '../output/'+datetime.now().strftime('%Y%m%d-%H%M%S')
+train_set = args.train_set
+train_sample_rate = args.train_sample_rate
+test_set = args.test_set
+deploy_set = args.deploy_set
+pretrain = args.pretrain
+if args.output_dir is None:
+    output_dir = '../output/'+datetime.now().strftime('%Y%m%d-%H%M%S')
+else:
+    output_dir = args.output_dir
 logging = init_log(output_dir)
 # 复制当前脚本到输出目录，便于复现实验
 copy_file(os.path.abspath(__file__), output_dir+'/')
@@ -139,31 +159,133 @@ def get_tra_ori():
     return model
 tra_ori_model = get_tra_ori()
 
+# 查找图像文件（支持多种格式）
+def find_image_files(folder, image_format=None):
+    """
+    查找文件夹中的图像文件
+    
+    Args:
+        folder: 文件夹路径
+        image_format: 指定的图像格式（如'.bmp'），None表示自动检测
+        
+    Returns:
+        (文件路径数组, 文件名数组（不含扩展名）, 检测到的格式)
+    """
+    if image_format is not None:
+        # 使用指定的格式
+        files, names = get_files_in_folder(folder, image_format)
+        if len(files) > 0:
+            return files, names, image_format
+        else:
+            logging.warning(f"未找到 {image_format} 格式的文件，尝试自动检测...")
+    
+    # 自动检测格式（按优先级）
+    for fmt in SUPPORTED_IMAGE_FORMATS:
+        files, names = get_files_in_folder(folder, fmt)
+        if len(files) > 0:
+            detected_format = fmt
+            logging.info(f"在 {folder} 中检测到图像格式: {detected_format} ({len(files)} 个文件)")
+            return files, names, detected_format
+    
+    # 未找到任何图像文件
+    logging.warning(f"在 {folder} 中未找到支持的图像格式文件")
+    return np.array([]), np.array([]), None
+
+# 加载图像文件（自动检测格式）
+def load_image_file(file_path, name, folder, image_format=None):
+    """
+    加载图像文件，支持多种格式
+    
+    Args:
+        file_path: 文件路径（不含扩展名）
+        name: 文件名（不含扩展名）
+        folder: 文件夹路径
+        image_format: 指定的图像格式，None表示自动检测
+        
+    Returns:
+        图像数组，如果未找到则返回None
+    """
+    if image_format is not None:
+        # 使用指定的格式
+        full_path = os.path.join(folder, name + image_format)
+        if os.path.exists(full_path):
+            return imageio.imread(full_path)
+    
+    # 自动检测格式
+    for fmt in SUPPORTED_IMAGE_FORMATS:
+        full_path = os.path.join(folder, name + fmt)
+        if os.path.exists(full_path):
+            return imageio.imread(full_path)
+    
+    return None
+
 # 扫描数据集，得到最大图像尺寸（按 8 对齐）与样本名
-def get_maximum_img_size_and_names(dataset, sample_rate=None):
+def get_maximum_img_size_and_names(dataset, sample_rate=None, image_format=None):
     if sample_rate is None:
         sample_rate = [1]*len(dataset)
     img_name, folder_name, img_size = [], [], []
+    detected_format = image_format
+    
     for folder, rate in zip(dataset, sample_rate):
-        _, img_name_t = get_files_in_folder(folder+'images/', '.bmp')
-        img_name.extend(img_name_t.tolist()*rate)
-        folder_name.extend([folder]*img_name_t.shape[0]*rate)
-        img_size.append(np.array(imageio.imread(folder+'images/'+img_name_t[0]+'.bmp').shape))
+        files, names, fmt = find_image_files(folder+'images/', image_format)
+        if len(files) == 0:
+            continue
+        
+        if detected_format is None:
+            detected_format = fmt
+        
+        img_name.extend(names.tolist()*rate)
+        folder_name.extend([folder]*names.shape[0]*rate)
+        
+        # 读取第一个文件获取尺寸
+        img = load_image_file('', names[0], folder+'images/', fmt)
+        if img is not None:
+            img_size.append(np.array(img.shape))
+    
+    if len(img_name) == 0:
+        raise ValueError("未找到任何图像文件！请检查数据集路径和图像格式。")
+    
     img_name = np.asarray(img_name)
     folder_name = np.asarray(folder_name)
     img_size = np.max(np.asarray(img_size), axis=0)
     # 让尺寸能被 8 整除（下采样/上采样步幅为 8）
     img_size = np.array(np.ceil(img_size/8)*8,dtype=np.int32)
-    return img_name, folder_name, img_size
+    return img_name, folder_name, img_size, detected_format
 
 # 单样本加载与增强（可随机旋转/平移），并对齐输出尺寸
-def sub_load_data(data, img_size, aug): 
-    img_name, dataset = data
-    img = imageio.imread(dataset+'images/'+img_name+'.bmp')
-    seg = imageio.imread(dataset+'seg_labels/'+img_name+'.png')
-    try:
-        ali = imageio.imread(dataset+'ori_labels/'+img_name+'.bmp')
-    except:
+def sub_load_data(data, img_size, aug, image_format=None): 
+    img_name, dataset, fmt = data
+    if fmt is None:
+        fmt = image_format
+    
+    # 加载主图像
+    img = load_image_file('', img_name, dataset+'images/', fmt)
+    if img is None:
+        raise FileNotFoundError(f"未找到图像文件: {dataset}images/{img_name}")
+    
+    # 加载分割标签（通常是PNG格式）
+    seg_path = os.path.join(dataset+'seg_labels/', img_name+'.png')
+    if os.path.exists(seg_path):
+        seg = imageio.imread(seg_path)
+    else:
+        # 尝试其他格式
+        seg = None
+        for ext in ['.png', '.bmp', '.jpg', '.jpeg']:
+            seg_path = os.path.join(dataset+'seg_labels/', img_name+ext)
+            if os.path.exists(seg_path):
+                seg = imageio.imread(seg_path)
+                break
+        if seg is None:
+            seg = np.zeros_like(img)
+    
+    # 加载方向标签（尝试多种格式）
+    ali = None
+    for ext in ['.bmp', '.png', '.jpg', '.jpeg']:
+        ali_path = os.path.join(dataset+'ori_labels/', img_name+ext)
+        if os.path.exists(ali_path):
+            ali = imageio.imread(ali_path)
+            break
+    if ali is None:
         ali = np.zeros_like(img)
     mnt = np.array(mnt_reader(dataset+'mnt_labels/'+img_name+'.mnt'), dtype=float)
     if any(img.shape != img_size):
@@ -199,11 +321,14 @@ def sub_load_data(data, img_size, aug):
     return img, seg, ali, mnt   
 
 # 数据加载器（生成器）：按 batch 输出图像、标签与名称
-def load_data(dataset, tra_ori_model, rand=False, aug=0.0, batch_size=1, sample_rate=None):
+def load_data(dataset, tra_ori_model, rand=False, aug=0.0, batch_size=1, sample_rate=None, image_format=None):
     if type(dataset[0]) == str:
-        img_name, folder_name, img_size = get_maximum_img_size_and_names(dataset, sample_rate)
+        img_name, folder_name, img_size, detected_format = get_maximum_img_size_and_names(dataset, sample_rate, image_format)
+        if image_format is None:
+            image_format = detected_format
     else:
         img_name, folder_name, img_size = dataset
+        detected_format = image_format
     if rand:
         rand_idx = np.arange(len(img_name))
         np.random.shuffle(rand_idx)
@@ -211,7 +336,7 @@ def load_data(dataset, tra_ori_model, rand=False, aug=0.0, batch_size=1, sample_
         folder_name = folder_name[rand_idx]
     if batch_size > 1 and use_multiprocessing==True:
         p = Pool(batch_size)        
-    p_sub_load_data = partial(sub_load_data, img_size=img_size, aug=aug)
+    p_sub_load_data = partial(sub_load_data, img_size=img_size, aug=aug, image_format=image_format)
     for i in range(0,len(img_name), batch_size):
         have_alignment = np.ones([batch_size, 1, 1, 1])
         image = np.zeros((batch_size, img_size[0], img_size[1], 1))
@@ -222,10 +347,11 @@ def load_data(dataset, tra_ori_model, rand=False, aug=0.0, batch_size=1, sample_
         minutiae_o = np.zeros((batch_size, img_size[0]//8, img_size[1]//8, 1))-1
         batch_name = [img_name[(i+j)%len(img_name)] for j in range(batch_size)]
         batch_f_name = [folder_name[(i+j)%len(img_name)] for j in range(batch_size)]
+        batch_format = [detected_format]*batch_size
         if batch_size > 1 and use_multiprocessing==True:    
-            results = p.map(p_sub_load_data, zip(batch_name, batch_f_name))
+            results = p.map(p_sub_load_data, zip(batch_name, batch_f_name, batch_format))
         else:
-            results = list(map(p_sub_load_data, zip(batch_name, batch_f_name)))
+            results = list(map(p_sub_load_data, zip(batch_name, batch_f_name, batch_format)))
         for j in range(batch_size):
             img, seg, ali, mnt = results[j]
             if np.sum(ali) == 0:
@@ -516,6 +642,17 @@ def ori_highest_peak(y_pred, length=180):
     ori_gau = K.conv2d(y_pred,glabel,padding='same')
     return ori_gau
 
+# NumPy 版本的高斯平滑峰值选择（用于 deploy 模式，避免计算图累积）
+def ori_highest_peak_numpy(y_pred, length=180):
+    """使用 NumPy 实现，避免在 TensorFlow 图模式中累积节点"""
+    glabel = gausslabel(length=length, stride=2).astype(np.float32)
+    # glabel shape: [1, 1, 90, 90], y_pred shape: [batch, H, W, 90]
+    # K.conv2d 在这里相当于对通道维度进行加权求和
+    # 使用 tensordot 实现: [batch, H, W, 90] x [90, 90] -> [batch, H, W, 90]
+    kernel = glabel[0, 0, :, :]  # [90, 90]
+    ori_gau = np.tensordot(y_pred, kernel, axes=([-1], [0]))  # [batch, H, W, 90]
+    return ori_gau
+
 # 评价指标：角度误差在 k 度内的准确率（含 ROI 掩码）
 def ori_acc_delta_k(y_true, y_pred, k=10, max_delta=180):
     # get ROI
@@ -575,7 +712,9 @@ def mnt_mean_delta(y_true, y_pred):
 
 # 训练流程（每若干步测试一次并保存权重）
 def train(input_shape=(512,512,1)):
-    img_name, folder_name, img_size = get_maximum_img_size_and_names(train_set, train_sample_rate)  
+    img_name, folder_name, img_size, detected_format = get_maximum_img_size_and_names(train_set, train_sample_rate, args.image_format)
+    if args.image_format is None:
+        args.image_format = detected_format  
     main_net_model = get_main_net((img_size[0],img_size[1],1), pretrain)
     plot_model(main_net_model, to_file=output_dir+'/model.png',show_shapes=True)
     adam = legacy_optimizers.Adam(learning_rate=0.0001, beta_1=0.9, beta_2=0.999, epsilon=1e-08)    
@@ -592,7 +731,7 @@ def train(input_shape=(512,512,1)):
                  'mnt_h_out':[mnt_mean_delta,],
                  'mnt_s_out':[seg_acc_pos, seg_acc_neg, seg_acc_all]})
     for epoch in range(100):
-        for i, train in enumerate(load_data((img_name, folder_name, img_size), tra_ori_model, rand=True, aug=0.7, batch_size=batch_size)):
+        for i, train in enumerate(load_data((img_name, folder_name, img_size), tra_ori_model, rand=True, aug=0.7, batch_size=batch_size, image_format=args.image_format)):
             loss = main_net_model.train_on_batch(train[0], 
                 {'ori_out_1':train[1], 'ori_out_2':train[2], 'seg_out':train[3],
                 'mnt_w_out':train[4], 'mnt_h_out':train[5], 'mnt_o_out':train[6], 'mnt_s_out':train[7]})  
@@ -638,7 +777,9 @@ def label2mnt(mnt_s_out, mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5):
 # 测试流程：预测、计算指标、NMS 与可视化
 def test(test_set, model, outdir, test_num=10, draw=True):
     logging.info("Testing %s:"%(test_set))
-    img_name, folder_name, img_size = get_maximum_img_size_and_names(test_set)  
+    img_name, folder_name, img_size, detected_format = get_maximum_img_size_and_names(test_set, image_format=args.image_format)
+    if args.image_format is None:
+        args.image_format = detected_format  
     main_net_model = get_main_net((img_size[0],img_size[1],1), model)
     nonsense = legacy_optimizers.SGD(learning_rate=0.0, momentum=0.0, nesterov=False)    
     main_net_model.compile(optimizer=nonsense,
@@ -654,7 +795,7 @@ def test(test_set, model, outdir, test_num=10, draw=True):
                  'mnt_h_out':[mnt_mean_delta,],
                  'mnt_s_out':[seg_acc_pos, seg_acc_neg, seg_acc_all]})
     ave_loss, ave_prf_nms = [], []
-    for j, test in enumerate(load_data((img_name, folder_name, img_size), tra_ori_model, rand=False, aug=0.0, batch_size=1)):      
+    for j, test in enumerate(load_data((img_name, folder_name, img_size), tra_ori_model, rand=False, aug=0.0, batch_size=1, image_format=args.image_format)):      
         if j < test_num:
             logging.info("%d / %d: %s"%(j+1, len(img_name), img_name[j]))    
             ori_out_1, ori_out_2, seg_out, mnt_o_out, mnt_w_out, mnt_h_out, mnt_s_out  = main_net_model.predict(test[0])
@@ -696,25 +837,50 @@ def test(test_set, model, outdir, test_num=10, draw=True):
     return
 
 # 部署：对未标注数据进行预测，导出可视化与结构化结果
-def deploy(deploy_set, set_name=None):
+def deploy(deploy_set, set_name=None, image_format=None):
     if set_name is None:
-        set_name = deploy_set.split('/')[-2]
+        # 从路径中提取数据集名称（处理末尾斜杠）
+        deploy_set_normalized = deploy_set.rstrip('/')
+        set_name = os.path.basename(deploy_set_normalized)
+        # 如果提取失败，使用默认名称
+        if not set_name:
+            set_name = deploy_set_normalized.split('/')[-2] if '/' in deploy_set_normalized else 'dataset'
     mkdir(output_dir+'/'+set_name+'/')
     logging.info("Predicting %s:"%(set_name)) 
-    _, img_name = get_files_in_folder(deploy_set, '.bmp')
+    
+    # 查找图像文件
+    files, img_name, detected_format = find_image_files(deploy_set, image_format)
     if len(img_name) == 0:
         deploy_set = deploy_set+'images/'
-        _, img_name = get_files_in_folder(deploy_set, '.bmp')
-    img_size = imageio.imread(deploy_set+img_name[0]+'.bmp').shape
+        files, img_name, detected_format = find_image_files(deploy_set, image_format)
+    
+    if len(img_name) == 0:
+        raise ValueError(f"在 {deploy_set} 中未找到任何图像文件！")
+    
+    if image_format is None:
+        image_format = detected_format
+    
+    logging.info(f"检测到图像格式: {image_format} ({len(img_name)} 个文件)")
+    
+    # 读取第一个文件获取尺寸
+    img = load_image_file('', img_name[0], deploy_set, image_format)
+    if img is None:
+        raise FileNotFoundError(f"无法加载图像文件: {deploy_set}{img_name[0]}")
+    
+    img_size = img.shape
     # 使用整除保持整数尺寸，避免传入 Keras 的浮点形状
     img_size = (np.array(img_size, dtype=np.int32)//8*8).astype(np.int32)      
     main_net_model = get_main_net((img_size[0],img_size[1],1), pretrain)
-    _, img_name = get_files_in_folder(deploy_set, '.bmp')
+    
     time_c = []
     for i in range(0,len(img_name)):
         logging.info("%s %d / %d: %s"%(set_name, i+1, len(img_name), img_name[i]))
         time_start = time()    
-        image = imageio.imread(deploy_set+img_name[i]+'.bmp') / 255.0
+        image = load_image_file('', img_name[i], deploy_set, image_format)
+        if image is None:
+            logging.warning(f"跳过无法加载的文件: {img_name[i]}")
+            continue
+        image = image / 255.0
         image = image[:img_size[0],:img_size[1]]      
         image = np.reshape(image,[1, image.shape[0], image.shape[1], 1])
         enhance_img, ori_out_1, ori_out_2, seg_out, mnt_o_out, mnt_w_out, mnt_h_out, mnt_s_out = main_net_model.predict(image) 
@@ -724,8 +890,9 @@ def deploy(deploy_set, set_name=None):
         seg_out = cv2.morphologyEx(round_seg, cv2.MORPH_OPEN, kernel)
         mnt = label2mnt(np.squeeze(mnt_s_out)*np.round(np.squeeze(seg_out)), mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5)
         mnt_nms = nms(mnt)
-        ori = sess.run(ori_highest_peak(ori_out_1))                           
-        ori = (np.argmax(ori, axis=-1)*2-90)/180.*np.pi  
+        # 使用 NumPy 版本避免计算图累积
+        ori_gau = ori_highest_peak_numpy(ori_out_1)
+        ori = (np.argmax(ori_gau, axis=-1)*2-90)/180.*np.pi  
         time_afterpost = time()
         
         # 输出详细信息
@@ -783,7 +950,7 @@ def main():
         logging.info("开始部署模式...")
         for i, folder in enumerate(deploy_set):
             logging.info("处理数据集 %d: %s" % (i, folder))
-            deploy(folder, str(i))
+            deploy(folder, None, args.image_format)  # 传入 None 让 deploy 函数自动提取数据集名称
     else:
         logging.error("未知模式: %s" % args.mode)
         pass
