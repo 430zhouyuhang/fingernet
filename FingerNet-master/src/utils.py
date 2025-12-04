@@ -204,8 +204,14 @@ def mnt_P_R_F(y_true, y_pred, maxd=15, maxo=np.pi/6):
         ori = 0
     return precision, recall, fmeasure(precision, recall), loc, ori
 
-def nms(mnt):
-    """基于距离与方向阈值的贪心 NMS，按分数降序抑制相邻点。"""
+def nms(mnt, max_distance=16.0, max_angle=np.pi/6):
+    """基于距离与方向阈值的贪心 NMS，按分数降序抑制相邻点。
+    
+    Args:
+        mnt: 细节点数组，列顺序为 x, y, orientation, confidence(可选)。
+        max_distance: 空间距离阈值（像素）。
+        max_angle: 方向差阈值（弧度）。
+    """
     if mnt.shape[0]==0:
         return mnt
     # sort score
@@ -213,7 +219,7 @@ def nms(mnt):
     mnt_sort.sort(key=lambda x:x[3], reverse=True)
     mnt_sort = np.array(mnt_sort)
     # cal distance
-    inrange = distance(mnt_sort, mnt_sort, max_D=16, max_O=np.pi/6).astype(np.float32)
+    inrange = distance(mnt_sort, mnt_sort, max_D=max_distance, max_O=max_angle).astype(np.float32)
     keep_list = np.ones(mnt_sort.shape[0])
     for i in range(mnt_sort.shape[0]):
         if keep_list[i] == 0:

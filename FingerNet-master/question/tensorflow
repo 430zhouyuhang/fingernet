@@ -1,0 +1,3 @@
+tensorflow-gpu-2.15.1 在RTX 30，40等消费级显卡上，windows环境下无法使用。
+TensorFlow 2.11 以后，官方不再发布 Windows 平台的 GPU 版二进制包，只支持 Linux（含 WSL2）。
+所以要在 Windows 上用 TF GPU，推荐用 WSL2 + Ubuntu + CUDA，而不是裸跑在原生 Windows 环境。

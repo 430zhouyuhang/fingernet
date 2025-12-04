@@ -1,6 +1,6 @@
 # coding=utf-8
 # ===== 1) 标准库优先，越轻的越靠前 =====
-import os, sys, argparse
+import os, sys, argparse, math
 from multiprocessing import Pool
 from functools import partial, reduce
 from time import time
@@ -33,6 +33,10 @@ parser.add_argument('--pretrain', type=str, default='../models/released_version/
                     help='预训练模型路径')
 parser.add_argument('--output_dir', type=str, default=None,
                     help='输出目录，None表示使用时间戳自动生成')
+parser.add_argument('--nms_max_distance', type=float, default=16.0,
+                    help='NMS空间距离阈值（像素，默认: 16.0）')
+parser.add_argument('--nms_max_angle', type=float, default=math.pi/6,
+                    help='NMS方向差阈值（弧度，默认: π/6）')
 args = parser.parse_args()
 
 # 支持的图像格式列表（按优先级排序）
@@ -52,6 +56,10 @@ import cv2, pickle
 import imageio.v2 as imageio
 import numpy as np
 from scipy import ndimage, signal, sparse, io
+try:
+    import psutil  # type: ignore
+except ImportError:
+    psutil = None
 
 # 本地工具（理想情况下改成显式导入具体符号，避免 * ）
 from utils import *
@@ -103,6 +111,86 @@ else:
 logging = init_log(output_dir)
 # 复制当前脚本到输出目录，便于复现实验
 copy_file(os.path.abspath(__file__), output_dir+'/')
+
+MB_IN_BYTES = 1024.0 * 1024.0
+
+def _get_process_rss_mb_fallback():
+    """在缺少 psutil 时获取进程常驻内存，支持 Windows 与 POSIX。"""
+    if os.name == 'nt':
+        try:
+            import ctypes
+            from ctypes import wintypes
+
+            class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+                _fields_ = [
+                    ('cb', wintypes.DWORD),
+                    ('PageFaultCount', wintypes.DWORD),
+                    ('PeakWorkingSetSize', ctypes.c_size_t),
+                    ('WorkingSetSize', ctypes.c_size_t),
+                    ('QuotaPeakPagedPoolUsage', ctypes.c_size_t),
+                    ('QuotaPagedPoolUsage', ctypes.c_size_t),
+                    ('QuotaPeakNonPagedPoolUsage', ctypes.c_size_t),
+                    ('QuotaNonPagedPoolUsage', ctypes.c_size_t),
+                    ('PagefileUsage', ctypes.c_size_t),
+                    ('PeakPagefileUsage', ctypes.c_size_t),
+                ]
+
+            counters = PROCESS_MEMORY_COUNTERS()
+            counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS)
+            handle = ctypes.windll.kernel32.GetCurrentProcess()
+            if ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb):
+                return counters.WorkingSetSize / MB_IN_BYTES
+        except Exception:
+            return None
+    else:
+        try:
+            import resource
+            usage = resource.getrusage(resource.RUSAGE_SELF)
+            rss = usage.ru_maxrss
+            # macOS 报告字节，Linux 报告 KB
+            if sys.platform.startswith('darwin'):
+                rss_bytes = rss
+            else:
+                rss_bytes = rss * 1024
+            return rss_bytes / MB_IN_BYTES
+        except Exception:
+            return None
+    return None
+
+def collect_memory_snapshot():
+    rss_mb = gpu_current_mb = gpu_peak_mb = None
+    if psutil is not None:
+        try:
+            rss_mb = psutil.Process(os.getpid()).memory_info().rss / MB_IN_BYTES
+        except Exception:
+            rss_mb = None
+    if rss_mb is None:
+        rss_mb = _get_process_rss_mb_fallback()
+    try:
+        gpu_devices = tf.config.experimental.list_physical_devices('GPU')
+    except Exception:
+        gpu_devices = []
+    if gpu_devices:
+        try:
+            gpu_info = tf.config.experimental.get_memory_info('GPU:0')
+            gpu_current_mb = gpu_info.get('current', 0.0) / MB_IN_BYTES
+            gpu_peak_mb = gpu_info.get('peak', 0.0) / MB_IN_BYTES
+        except Exception:
+            gpu_current_mb = gpu_peak_mb = None
+    return {
+        'rss': rss_mb,
+        'gpu_current': gpu_current_mb,
+        'gpu_peak': gpu_peak_mb
+    }
+
+def format_memory_value(value):
+    return "%.1fMB" % value if value is not None else "N/A"
+
+def summarize_memory(records, key):
+    values = [rec[key] for rec in records if rec.get(key) is not None]
+    if not values:
+        return None, None
+    return float(np.mean(values)), float(np.max(values))
 
 # 图像归一化（保持与原实现一致）
 def img_normalization(img_input, m0=0.0, var0=1.0):
@@ -807,7 +895,11 @@ def test(test_set, model, outdir, test_num=10, draw=True):
             mnt_gt = label2mnt(test[7], test[4], test[5], test[6])
             mnt_s_out = mnt_s_out * test[3]
             mnt = label2mnt(mnt_s_out, mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5)
-            mnt_nms = nms(mnt)
+            mnt_nms = nms(
+                mnt,
+                max_distance=args.nms_max_distance,
+                max_angle=args.nms_max_angle
+            )
             
             # 输出详细信息
             logging.info("GT细节点数量: %d, 预测细节点数量: %d (NMS前: %d)"%(len(mnt_gt), len(mnt_nms), len(mnt)))
@@ -872,28 +964,65 @@ def deploy(deploy_set, set_name=None, image_format=None):
     img_size = (np.array(img_size, dtype=np.int32)//8*8).astype(np.int32)      
     main_net_model = get_main_net((img_size[0],img_size[1],1), pretrain)
     
-    time_c = []
+    time_stats = []
+    memory_stats = []
     for i in range(0,len(img_name)):
         logging.info("%s %d / %d: %s"%(set_name, i+1, len(img_name), img_name[i]))
-        time_start = time()    
+        time_start = time()
+        
+        # 1. 读取图像文件
+        time_load_start = time()
         image = load_image_file('', img_name[i], deploy_set, image_format)
         if image is None:
             logging.warning(f"跳过无法加载的文件: {img_name[i]}")
             continue
+        time_load_end = time()
+        time_load_image = time_load_end - time_load_start
+        
+        # 2. 图像预处理（归一化、裁剪、reshape）
+        time_preprocess_start = time()
         image = image / 255.0
         image = image[:img_size[0],:img_size[1]]      
         image = np.reshape(image,[1, image.shape[0], image.shape[1], 1])
+        time_preprocess_end = time()
+        time_preprocess = time_preprocess_end - time_preprocess_start
+        
+        # 3. 网络推理
+        time_network_start = time()
         enhance_img, ori_out_1, ori_out_2, seg_out, mnt_o_out, mnt_w_out, mnt_h_out, mnt_s_out = main_net_model.predict(image) 
-        time_afterconv = time()
+        time_network_end = time()
+        time_network = time_network_end - time_network_start
+        
+        # 4. 分割后处理
+        time_seg_post_start = time()
         round_seg = np.round(np.squeeze(seg_out))
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5, 5))
         seg_out = cv2.morphologyEx(round_seg, cv2.MORPH_OPEN, kernel)
+        time_seg_post_end = time()
+        time_seg_post = time_seg_post_end - time_seg_post_start
+        
+        # 5. 细节点提取
+        time_mnt_extract_start = time()
         mnt = label2mnt(np.squeeze(mnt_s_out)*np.round(np.squeeze(seg_out)), mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5)
-        mnt_nms = nms(mnt)
-        # 使用 NumPy 版本避免计算图累积
+        time_mnt_extract_end = time()
+        time_mnt_extract = time_mnt_extract_end - time_mnt_extract_start
+        
+        # 6. NMS处理
+        time_nms_start = time()
+        mnt_nms = nms(
+            mnt,
+            max_distance=args.nms_max_distance,
+            max_angle=args.nms_max_angle
+        )
+        time_nms_end = time()
+        time_nms = time_nms_end - time_nms_start
+        
+        # 7. 方向计算
+        time_ori_start = time()
         ori_gau = ori_highest_peak_numpy(ori_out_1)
         ori = (np.argmax(ori_gau, axis=-1)*2-90)/180.*np.pi  
-        time_afterpost = time()
+        time_ori_end = time()
+        time_ori = time_ori_end - time_ori_start
         
         # 输出详细信息
         logging.info("检测到细节点数量: %d (NMS前: %d)"%(len(mnt_nms), len(mnt)))
@@ -902,18 +1031,28 @@ def deploy(deploy_set, set_name=None, image_format=None):
             max_confidence = np.max(mnt_nms[:, 3]) if mnt_nms.shape[1] >= 4 else 0.0
             logging.info("细节点置信度 - 平均: %.3f, 最大: %.3f"%(avg_confidence, max_confidence))
         
-        # 保存细节点文件（包含confidence信息）
+        # 8. 保存.mnt文件
+        time_save_mnt_start = time()
         mnt_writer(mnt_nms, img_name[i], img_size, "%s/%s/%s.mnt"%(output_dir, set_name, img_name[i]))        
+        time_save_mnt_end = time()
+        time_save_mnt = time_save_mnt_end - time_save_mnt_start
         
-        # 生成可视化结果
+        # 9. 绘制可视化结果
+        time_draw_start = time()
         draw_ori_on_img(image, ori, np.ones_like(seg_out), "%s/%s/%s_ori.png"%(output_dir, set_name, img_name[i]))        
         draw_minutiae(image, mnt_nms[:,:3], "%s/%s/%s_mnt.png"%(output_dir, set_name, img_name[i]))
+        time_draw_end = time()
+        time_draw = time_draw_end - time_draw_start
         
-        # 保存增强图像和分割结果
+        # 10. 保存图像文件（enh.png, seg.png）
+        time_save_img_start = time()
         imageio.imwrite("%s/%s/%s_enh.png"%(output_dir, set_name, img_name[i]), (np.squeeze(enhance_img)*ndimage.zoom(np.round(np.squeeze(seg_out)), [8,8], order=0)).astype(np.uint8))
         imageio.imwrite("%s/%s/%s_seg.png"%(output_dir, set_name, img_name[i]), (ndimage.zoom(np.round(np.squeeze(seg_out)), [8,8], order=0)*255).astype(np.uint8)) 
+        time_save_img_end = time()
+        time_save_img = time_save_img_end - time_save_img_start
         
-        # 保存.mat文件（包含方向信息和分布图）
+        # 11. 保存.mat文件
+        time_save_mat_start = time()
         io.savemat("%s/%s/%s.mat"%(output_dir, set_name, img_name[i]), {
             'orientation': ori, 
             'orientation_distribution_map': ori_out_1,
@@ -921,12 +1060,60 @@ def deploy(deploy_set, set_name=None, image_format=None):
             'segmentation': seg_out,
             'confidence_scores': mnt_nms[:, 3] if mnt_nms.shape[1] >= 4 else None
         })
+        time_save_mat_end = time()
+        time_save_mat = time_save_mat_end - time_save_mat_start
         
-        time_afterdraw = time()
-        time_c.append([time_afterconv-time_start, time_afterpost-time_afterconv, time_afterdraw-time_afterpost])
-        logging.info("load+conv: %.3fs, seg-postpro+nms: %.3f, draw: %.3f"%(time_c[-1][0],time_c[-1][1],time_c[-1][2]))
-    time_c = np.mean(np.array(time_c),axis=0)
-    logging.info("Average: load+conv: %.3fs, oir-select+seg-post+nms: %.3f, draw: %.3f"%(time_c[0],time_c[1],time_c[2]))
+        # 记录所有时间统计
+        core_time = time_preprocess + time_network + time_seg_post + time_mnt_extract + time_nms + time_ori
+        time_stats.append({
+            'load_image': time_load_image,
+            'preprocess': time_preprocess,
+            'network': time_network,
+            'seg_post': time_seg_post,
+            'mnt_extract': time_mnt_extract,
+            'nms': time_nms,
+            'ori': time_ori,
+            'save_mnt': time_save_mnt,
+            'draw': time_draw,
+            'save_img': time_save_img,
+            'save_mat': time_save_mat,
+            'core': core_time
+        })
+        mem_snapshot = collect_memory_snapshot()
+        memory_stats.append(mem_snapshot)
+        logging.info("内存统计 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
+                     format_memory_value(mem_snapshot['rss']),
+                     format_memory_value(mem_snapshot['gpu_current']),
+                     format_memory_value(mem_snapshot['gpu_peak']))
+        
+        logging.info("时间统计 - 预处理: %.1fms, 网络推理: %.1fms, 分割后处理: %.1fms, 细节点提取: %.1fms, NMS: %.1fms, 方向计算: %.1fms, 核心总计: %.1fms"%
+            (time_preprocess*1000, time_network*1000, time_seg_post*1000, time_mnt_extract*1000, time_nms*1000, time_ori*1000, core_time*1000))
+    
+    # 计算平均时间
+    if len(time_stats) > 0:
+        avg_times = {}
+        for key in time_stats[0].keys():
+            avg_times[key] = np.mean([stat[key] for stat in time_stats])
+        
+        logging.info("\n平均时间统计:")
+        logging.info("  图像预处理: %.1fms" % (avg_times['preprocess']*1000))
+        logging.info("  网络推理: %.1fms" % (avg_times['network']*1000))
+        logging.info("  分割后处理: %.1fms" % (avg_times['seg_post']*1000))
+        logging.info("  细节点提取: %.1fms" % (avg_times['mnt_extract']*1000))
+        logging.info("  NMS处理: %.1fms" % (avg_times['nms']*1000))
+        logging.info("  方向计算: %.1fms" % (avg_times['ori']*1000))
+        logging.info("  核心总计(预处理+网络+分割后处理+细节点提取+NMS+方向计算): %.1fms" % (avg_times['core']*1000))
+    if len(memory_stats) > 0:
+        rss_avg, rss_max = summarize_memory(memory_stats, 'rss')
+        gpu_cur_avg, gpu_cur_max = summarize_memory(memory_stats, 'gpu_current')
+        gpu_peak_avg, gpu_peak_max = summarize_memory(memory_stats, 'gpu_peak')
+        logging.info("\n平均内存统计:")
+        if rss_avg is not None:
+            logging.info("  常驻内存: 平均 %.1fMB, 峰值 %.1fMB", rss_avg, rss_max)
+        if gpu_cur_avg is not None:
+            logging.info("  GPU当前占用: 平均 %.1fMB, 峰值 %.1fMB", gpu_cur_avg, gpu_cur_max)
+        if gpu_peak_avg is not None:
+            logging.info("  GPU峰值记录: 平均 %.1fMB, 最大 %.1fMB", gpu_peak_avg, gpu_peak_max)
     return  
 
 # 入口：根据模式运行

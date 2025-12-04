@@ -13,12 +13,66 @@ from dataclasses import dataclass, field
 import matplotlib
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.pyplot as plt
+try:
+    import psutil  # type: ignore
+except ImportError:
+    psutil = None
+try:
+    import tensorflow as tf  # type: ignore
+except Exception:
+    tf = None
 
 # 设置中文字体支持
 plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
 
 from scipy.spatial.distance import cdist
+
+MB_IN_BYTES = 1024.0 * 1024.0
+
+
+def collect_memory_snapshot() -> Dict[str, Optional[float]]:
+    """采集当前常驻内存与显存."""
+    snapshot = {'rss': None, 'gpu_current': None, 'gpu_peak': None}
+    if psutil is not None:
+        try:
+            snapshot['rss'] = psutil.Process(os.getpid()).memory_info().rss / MB_IN_BYTES
+        except Exception:
+            pass
+    tf_module = tf
+    if tf_module is not None:
+        try:
+            devices = tf_module.config.experimental.list_physical_devices('GPU')
+        except Exception:
+            devices = []
+        if devices:
+            try:
+                gpu_info = tf_module.config.experimental.get_memory_info('GPU:0')
+                snapshot['gpu_current'] = gpu_info.get('current', 0.0) / MB_IN_BYTES
+                snapshot['gpu_peak'] = gpu_info.get('peak', 0.0) / MB_IN_BYTES
+            except Exception:
+                pass
+    return snapshot
+
+
+def format_memory_value(value: Optional[float]) -> str:
+    return f"{value:.1f}MB" if value is not None else "N/A"
+
+
+def record_memory(records: List[Dict[str, Optional[float]]], label: str):
+    snapshot = collect_memory_snapshot()
+    snapshot['label'] = label
+    records.append(snapshot)
+    print(f"[内存] {label} - 常驻: {format_memory_value(snapshot['rss'])}, "
+          f"GPU当前: {format_memory_value(snapshot['gpu_current'])}, "
+          f"GPU峰值: {format_memory_value(snapshot['gpu_peak'])}")
+
+
+def summarize_memory(records: List[Dict[str, Optional[float]]], key: str) -> Tuple[Optional[float], Optional[float]]:
+    values = [rec[key] for rec in records if rec.get(key) is not None]
+    if not values:
+        return None, None
+    return float(np.mean(values)), float(np.max(values))
 
 
 @dataclass
@@ -632,17 +686,7 @@ class TemplateMatcher:
             save_data = {
                 'multi_templates': multi_templates,  # 多个模板
                 'sample_ids': sample_ids or [],  # 样本ID列表
-                'metadata': metadata or {},
-                'matcher_params': {
-                    'k_neighbors': self.k_neighbors,
-                    'template_radius': self.template_radius,
-                    'distance_tolerance': self.distance_tolerance,
-                    'angle_tolerance': np.degrees(self.angle_tolerance),
-                    'orientation_tolerance': np.degrees(self.orientation_tolerance),
-                    'max_distance': self.max_distance,
-                    'match_threshold': self.match_threshold,
-                    'templates_per_finger': self.templates_per_finger
-                }
+                'metadata': metadata or {}
             }
             
             with open(template_file, 'wb') as f:
@@ -876,6 +920,8 @@ class TemplateMatcher:
 
 def demo_matching():
     """演示模板匹配功能"""
+    memory_records: List[Dict[str, Optional[float]]] = []
+    record_memory(memory_records, "脚本启动")
     # 创建模板匹配器（使用默认参数，match_threshold=0.65）
     matcher = TemplateMatcher(
         k_neighbors=5,  # 局部模板使用5个最近邻
@@ -887,6 +933,7 @@ def demo_matching():
         match_threshold=0.65,  # 模板匹配阈值0.65（与默认值一致）
         templates_per_finger=1
     )
+    record_memory(memory_records, "创建匹配器")
     
     print("指纹模板匹配演示")
     print("="*50)
@@ -912,6 +959,7 @@ def demo_matching():
     
     minutiae1 = matcher.load_minutiae_from_mnt(mnt1_path)
     minutiae2 = matcher.load_minutiae_from_mnt(mnt2_path)
+    record_memory(memory_records, "加载图像与细节点")
     
     if not minutiae1 or not minutiae2:
         print("错误：无法加载细节点数据")
@@ -923,6 +971,7 @@ def demo_matching():
     # 执行模板匹配
     print("\n开始模板匹配...")
     result = matcher.match_fingerprints(minutiae1, minutiae2)
+    record_memory(memory_records, "匹配完成")
     
     # 输出结果
     print(f"\n匹配结果:")
@@ -953,6 +1002,22 @@ def demo_matching():
         image2_label=os.path.basename(image2_path)
     )
     print("匹配结果已保存为 match_result.png")
+    record_memory(memory_records, "可视化完成")
+    
+    print("\n内存统计:")
+    for rec in memory_records:
+        print(f"  - {rec['label']}: 常驻 {format_memory_value(rec.get('rss'))}, "
+              f"GPU当前 {format_memory_value(rec.get('gpu_current'))}, "
+              f"GPU峰值 {format_memory_value(rec.get('gpu_peak'))}")
+    rss_avg, rss_max = summarize_memory(memory_records, 'rss')
+    gpu_cur_avg, gpu_cur_max = summarize_memory(memory_records, 'gpu_current')
+    gpu_peak_avg, gpu_peak_max = summarize_memory(memory_records, 'gpu_peak')
+    if rss_avg is not None:
+        print(f"  平均常驻内存: {rss_avg:.1f}MB (峰值 {rss_max:.1f}MB)")
+    if gpu_cur_avg is not None:
+        print(f"  平均GPU占用: {gpu_cur_avg:.1f}MB (峰值 {gpu_cur_max:.1f}MB)")
+    if gpu_peak_avg is not None:
+        print(f"  GPU记录峰值: {gpu_peak_avg:.1f}MB (最大 {gpu_peak_max:.1f}MB)")
 
 
 if __name__ == "__main__":

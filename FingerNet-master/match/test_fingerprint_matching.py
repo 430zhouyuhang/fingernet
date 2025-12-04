@@ -13,6 +13,14 @@ from typing import List, Tuple, Dict, Any, Optional
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+try:
+    import psutil  # type: ignore
+except ImportError:
+    psutil = None
+try:
+    import tensorflow as tf  # type: ignore
+except Exception:
+    tf = None
 
 # 添加match模块路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -20,6 +28,51 @@ from match import TemplateMatcher, Minutia, MatchResult
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
+
+MB_IN_BYTES = 1024.0 * 1024.0
+
+
+def collect_memory_snapshot() -> Dict[str, Optional[float]]:
+    snapshot = {'rss': None, 'gpu_current': None, 'gpu_peak': None}
+    if psutil is not None:
+        try:
+            snapshot['rss'] = psutil.Process(os.getpid()).memory_info().rss / MB_IN_BYTES
+        except Exception:
+            pass
+    tf_module = tf
+    if tf_module is not None:
+        try:
+            devices = tf_module.config.experimental.list_physical_devices('GPU')
+        except Exception:
+            devices = []
+        if devices:
+            try:
+                gpu_info = tf_module.config.experimental.get_memory_info('GPU:0')
+                snapshot['gpu_current'] = gpu_info.get('current', 0.0) / MB_IN_BYTES
+                snapshot['gpu_peak'] = gpu_info.get('peak', 0.0) / MB_IN_BYTES
+            except Exception:
+                pass
+    return snapshot
+
+
+def format_memory_value(value: Optional[float]) -> str:
+    return f"{value:.1f}MB" if value is not None else "N/A"
+
+
+def record_memory(records: List[Dict[str, Optional[float]]], label: str):
+    snapshot = collect_memory_snapshot()
+    snapshot['label'] = label
+    records.append(snapshot)
+    print(f"[内存] {label} - 常驻: {format_memory_value(snapshot['rss'])}, "
+          f"GPU当前: {format_memory_value(snapshot['gpu_current'])}, "
+          f"GPU峰值: {format_memory_value(snapshot['gpu_peak'])}")
+
+
+def summarize_memory(records: List[Dict[str, Optional[float]]], key: str) -> Tuple[Optional[float], Optional[float]]:
+    values = [rec[key] for rec in records if rec.get(key) is not None]
+    if not values:
+        return None, None
+    return float(np.mean(values)), float(np.max(values))
 
 
 def parse_arguments():
@@ -237,7 +290,8 @@ def build_templates_and_save(matcher: TemplateMatcher,
 def compute_far_frr(matcher: TemplateMatcher,
                     files: List[Tuple[str, str, str, str]],
                     template_dir: str,
-                    threshold: float = 0.5) -> Tuple[float, float, List[float], List[float], Dict[str, List[Dict[str, Any]]], float, Dict[str, Any]]:
+                    threshold: float = 0.5,
+                    memory_records: Optional[List[Dict[str, Optional[float]]]] = None) -> Tuple[float, float, List[float], List[float], Dict[str, List[Dict[str, Any]]], float, Dict[str, Any]]:
     """
     计算FAR和FRR
     
@@ -254,6 +308,8 @@ def compute_far_frr(matcher: TemplateMatcher,
     print("="*60)
     print("计算FAR和FRR...")
     print("="*60)
+    if memory_records is not None:
+        record_memory(memory_records, "匹配计算开始")
     
     matching_start_time = time.time()
     
@@ -354,6 +410,8 @@ def compute_far_frr(matcher: TemplateMatcher,
     
     genuine_match_time = time.time() - genuine_match_start_time
     print(f"正样本匹配总数: {len(genuine_scores)}")
+    if memory_records is not None:
+        record_memory(memory_records, "正样本匹配完成")
     
     # 计算负样本分数（Impostor）
     # 负样本：不同手指的查询样本与 enrollment 模板的匹配
@@ -362,7 +420,7 @@ def compute_far_frr(matcher: TemplateMatcher,
     
     # 多模板策略：使用多模板进行匹配（负样本不需要排除，因为不同手指）
     impostor_match_start_time = time.time()
-    for i, finger_id1 in enumerate(finger_ids):
+    for finger_id1 in finger_ids:
         samples1 = finger_groups[finger_id1]
         if len(samples1) == 0:
             continue
@@ -372,8 +430,10 @@ def compute_far_frr(matcher: TemplateMatcher,
         if not os.path.exists(multi_template_file1):
             continue
         
-        # 与其他手指匹配
-        for finger_id2 in finger_ids[i+1:]:
+        # 与其他手指匹配（每个模板与所有其余手指的样本匹配一次）
+        for finger_id2 in finger_ids:
+            if finger_id2 == finger_id1:
+                continue
             samples2 = finger_groups[finger_id2]
             if len(samples2) == 0:
                 continue
@@ -408,17 +468,19 @@ def compute_far_frr(matcher: TemplateMatcher,
                     'query_sample_id': f"{finger_id2}_{sample_id2}",
                     'reference_sample_id': matched_sample_id,
                     'query_image_path': image_path2,
-                'query_mnt_path': mnt_path2,
-                'reference_image_path': ref_image_path,
-                'reference_mnt_path': ref_mnt_path,
-                'metadata': result.metadata or {}
-            })
+                    'query_mnt_path': mnt_path2,
+                    'reference_image_path': ref_image_path,
+                    'reference_mnt_path': ref_mnt_path,
+                    'metadata': result.metadata or {}
+                })
                 
                 if impostor_count % 100 == 0:
                     print(f"  已处理 {impostor_count} 个负样本匹配...")
     
     impostor_match_time = time.time() - impostor_match_start_time
     print(f"负样本匹配总数: {len(impostor_scores)}")
+    if memory_records is not None:
+        record_memory(memory_records, "负样本匹配完成")
     
     # 计算FAR和FRR
     genuine_scores = np.array(genuine_scores)
@@ -443,6 +505,8 @@ def compute_far_frr(matcher: TemplateMatcher,
     print(f"平均每次匹配时间: {avg_match_time*1000:.3f} 毫秒")
     print(f"平均正样本匹配时间: {avg_genuine_time*1000:.3f} 毫秒")
     print(f"平均负样本匹配时间: {avg_impostor_time*1000:.3f} 毫秒")
+    if memory_records is not None:
+        record_memory(memory_records, "匹配计算结束")
     
     return far, frr, genuine_scores.tolist(), impostor_scores.tolist(), sample_details, matching_time, {
         'total_matches': total_matches,
@@ -835,6 +899,9 @@ def main():
         print("请先运行FingerNet提取细节点")
         return
     
+    memory_records: List[Dict[str, Optional[float]]] = []
+    record_memory(memory_records, "脚本启动")
+    
     # 从数据集目录路径中提取数据集名称
     dataset_name = os.path.basename(os.path.normpath(args.dataset_dir)) or "dataset"
     
@@ -859,6 +926,7 @@ def main():
         ransac_runs=args.ransac_runs,
         templates_per_finger=args.templates_per_finger
     )
+    record_memory(memory_records, "创建匹配器")
     
     # 查找所有文件
     print("="*60)
@@ -883,6 +951,7 @@ def main():
         rebuild=args.rebuild_templates,
         templates_per_finger=args.templates_per_finger
     )
+    record_memory(memory_records, "模板构建完成")
     
     # 解析阈值列表
     thresholds = [float(t.strip()) for t in args.thresholds.split(',')]
@@ -898,8 +967,9 @@ def main():
     # 只计算一次分数（所有阈值共享相同的分数列表）
     # 使用第一个阈值计算分数，后续只用于计算FAR/FRR
     _, _, all_genuine_scores, all_impostor_scores, sample_details, matching_time, match_stats = compute_far_frr(
-        matcher, files, template_dir, thresholds[0]
+        matcher, files, template_dir, thresholds[0], memory_records=memory_records
     )
+    record_memory(memory_records, "匹配统计完成")
     
     # 使用计算好的分数，在不同阈值下计算FAR和FRR
     genuine_scores_array = np.array(all_genuine_scores)
@@ -937,6 +1007,7 @@ def main():
     
     plot_time = time.time() - plot_start_time
     print(f"评估曲线图绘制时间: {plot_time:.3f} 秒")
+    record_memory(memory_records, "绘图完成")
 
     # 生成代表性匹配可视化
     print("\n" + "="*60)
@@ -955,6 +1026,7 @@ def main():
         false_positive_dir,
         args.num_visualizations
     )
+    record_memory(memory_records, "可视化完成")
     
     # 输出统计信息
     print("\n" + "="*60)
@@ -1026,6 +1098,7 @@ def main():
         f.write(f"可视化生成时间: {visualization_time:.3f} 秒\n")
         total_time = template_build_time + matching_time + plot_time + visualization_time
         f.write(f"总时间: {total_time:.3f} 秒\n")
+    record_memory(memory_records, "结果写入完成")
     
     print(f"\n所有结果文件已保存到目录: {output_dir}")
     print(f"  - 结果文本文件: {os.path.basename(result_file)}")
@@ -1060,6 +1133,21 @@ def main():
             print(f"      {os.path.relpath(file_path, output_dir)}")
     else:
         print("  - 假阳性示例: 未生成（可能不存在此类样本）")
+    
+    print("\n内存统计:")
+    for rec in memory_records:
+        print(f"  - {rec['label']}: 常驻 {format_memory_value(rec.get('rss'))}, "
+              f"GPU当前 {format_memory_value(rec.get('gpu_current'))}, "
+              f"GPU峰值 {format_memory_value(rec.get('gpu_peak'))}")
+    rss_avg, rss_max = summarize_memory(memory_records, 'rss')
+    gpu_cur_avg, gpu_cur_max = summarize_memory(memory_records, 'gpu_current')
+    gpu_peak_avg, gpu_peak_max = summarize_memory(memory_records, 'gpu_peak')
+    if rss_avg is not None:
+        print(f"  平均常驻内存: {rss_avg:.1f}MB (峰值 {rss_max:.1f}MB)")
+    if gpu_cur_avg is not None:
+        print(f"  平均GPU占用: {gpu_cur_avg:.1f}MB (峰值 {gpu_cur_max:.1f}MB)")
+    if gpu_peak_avg is not None:
+        print(f"  GPU记录峰值: {gpu_peak_avg:.1f}MB (最大 {gpu_peak_max:.1f}MB)")
 
 
 if __name__ == "__main__":
