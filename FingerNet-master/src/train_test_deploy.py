@@ -1,15 +1,17 @@
 # coding=utf-8
 # ===== 1) 标准库优先，越轻的越靠前 =====
-import os, sys, argparse, math
-from multiprocessing import Pool
-from functools import partial, reduce
-from time import time
+import argparse
+import math
+import os
 from datetime import datetime
+from functools import partial, reduce
+from multiprocessing import Pool
+from time import time
 
 # ===== 2) 后台绘图后端要在导入 pyplot 前设置 =====
 import matplotlib
+
 matplotlib.use('Agg')  # 必须早于 `import matplotlib.pyplot as plt`
-import matplotlib.pyplot as plt
 
 # ===== 3) 只用标准库先解析命令行（便于提前设置 GPU 环境）=====
 parser = argparse.ArgumentParser(description='Train-Test-Deploy')
@@ -48,13 +50,12 @@ if args.GPU.strip().lower() == 'cpu':
 else:
     os.environ['CUDA_VISIBLE_DEVICES'] = args.GPU  # 例如 "0" 或 "0,1"
 
-# 降低 TF 日志噪音
 os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')
 
 # ===== 5) 其余第三方库（非 TF）再导入 =====
-import cv2, pickle
-import imageio.v2 as imageio
+import cv2
 import numpy as np
+import imageio.v2 as imageio
 from scipy import ndimage, signal, sparse, io
 try:
     import psutil  # type: ignore
@@ -80,7 +81,6 @@ try:
 except Exception:
     from tensorflow.keras import optimizers as legacy_optimizers
 from tensorflow.keras.utils import plot_model
-from tensorflow.keras.callbacks import ModelCheckpoint
 
 # ===== 7) 保持你当前工程所需的 TF1 图模式（如需）=====
 tf.compat.v1.disable_eager_execution()
@@ -191,6 +191,27 @@ def summarize_memory(records, key):
     if not values:
         return None, None
     return float(np.mean(values)), float(np.max(values))
+
+def tensor_memory_mb(tensor):
+    if tensor is None:
+        return 0.0
+    try:
+        tensor_bytes = tensor.nbytes
+    except AttributeError:
+        try:
+            tensor_bytes = np.asarray(tensor).nbytes
+        except Exception:
+            return 0.0
+    return tensor_bytes / MB_IN_BYTES
+
+def estimate_feature_tensor_memory(tensor_items):
+    details = []
+    total_mb = 0.0
+    for name, tensor in tensor_items:
+        size_mb = tensor_memory_mb(tensor)
+        details.append((name, size_mb))
+        total_mb += size_mb
+    return total_mb, details
 
 # 图像归一化（保持与原实现一致）
 def img_normalization(img_input, m0=0.0, var0=1.0):
@@ -965,7 +986,16 @@ def deploy(deploy_set, set_name=None, image_format=None):
     main_net_model = get_main_net((img_size[0],img_size[1],1), pretrain)
     
     time_stats = []
-    memory_stats = []
+    baseline_memory_snapshot = collect_memory_snapshot()
+    if baseline_memory_snapshot:
+        logging.info("准备阶段内存 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
+                     format_memory_value(baseline_memory_snapshot['rss']),
+                     format_memory_value(baseline_memory_snapshot['gpu_current']),
+                     format_memory_value(baseline_memory_snapshot['gpu_peak']))
+    runtime_memory_peak = None
+    steady_state_baseline_snapshot = None
+    steady_state_deltas = []
+    steady_state_peak = None
     for i in range(0,len(img_name)):
         logging.info("%s %d / %d: %s"%(set_name, i+1, len(img_name), img_name[i]))
         time_start = time()
@@ -1079,12 +1109,46 @@ def deploy(deploy_set, set_name=None, image_format=None):
             'save_mat': time_save_mat,
             'core': core_time
         })
-        mem_snapshot = collect_memory_snapshot()
-        memory_stats.append(mem_snapshot)
-        logging.info("内存统计 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
-                     format_memory_value(mem_snapshot['rss']),
-                     format_memory_value(mem_snapshot['gpu_current']),
-                     format_memory_value(mem_snapshot['gpu_peak']))
+        feature_total_mb, feature_details = estimate_feature_tensor_memory([
+            ('enhance_img', enhance_img),
+            ('ori_out_1', ori_out_1),
+            ('ori_out_2', ori_out_2),
+            ('seg_out', seg_out),
+            ('mnt_o_out', mnt_o_out),
+            ('mnt_w_out', mnt_w_out),
+            ('mnt_h_out', mnt_h_out),
+            ('mnt_s_out', mnt_s_out),
+        ])
+        detail_text = ", ".join([f"{name}:{size:.2f}MB" for name, size in feature_details])
+        logging.info("特征图运行内存估计: 总计 %.2fMB (%s)", feature_total_mb, detail_text)
+        runtime_snapshot = collect_memory_snapshot()
+        runtime_delta = None
+        steady_state_delta = None
+        if baseline_memory_snapshot and baseline_memory_snapshot.get('rss') is not None and runtime_snapshot.get('rss') is not None:
+            runtime_delta = max(0.0, runtime_snapshot['rss'] - baseline_memory_snapshot['rss'])
+            if runtime_memory_peak is None:
+                runtime_memory_peak = runtime_delta
+            else:
+                runtime_memory_peak = max(runtime_memory_peak, runtime_delta)
+        if runtime_snapshot.get('rss') is not None:
+            if steady_state_baseline_snapshot is None:
+                steady_state_baseline_snapshot = runtime_snapshot
+                steady_state_deltas.append(0.0)
+                logging.info("稳态基准内存 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
+                             format_memory_value(runtime_snapshot.get('rss')),
+                             format_memory_value(runtime_snapshot.get('gpu_current')),
+                             format_memory_value(runtime_snapshot.get('gpu_peak')))
+            else:
+                steady_state_delta = max(0.0, runtime_snapshot['rss'] - steady_state_baseline_snapshot.get('rss', 0.0))
+                steady_state_deltas.append(steady_state_delta)
+                if steady_state_peak is None:
+                    steady_state_peak = steady_state_delta
+                else:
+                    steady_state_peak = max(steady_state_peak, steady_state_delta)
+        logging.info("特征提取运行内存 , GPU当前: %s, GPU峰值: %s; 稳态基准增量: %s",
+                     format_memory_value(runtime_snapshot.get('gpu_current')),
+                     format_memory_value(runtime_snapshot.get('gpu_peak')),
+                     format_memory_value(steady_state_delta))
         
         logging.info("时间统计 - 预处理: %.1fms, 网络推理: %.1fms, 分割后处理: %.1fms, 细节点提取: %.1fms, NMS: %.1fms, 方向计算: %.1fms, 核心总计: %.1fms"%
             (time_preprocess*1000, time_network*1000, time_seg_post*1000, time_mnt_extract*1000, time_nms*1000, time_ori*1000, core_time*1000))
@@ -1103,17 +1167,13 @@ def deploy(deploy_set, set_name=None, image_format=None):
         logging.info("  NMS处理: %.1fms" % (avg_times['nms']*1000))
         logging.info("  方向计算: %.1fms" % (avg_times['ori']*1000))
         logging.info("  核心总计(预处理+网络+分割后处理+细节点提取+NMS+方向计算): %.1fms" % (avg_times['core']*1000))
-    if len(memory_stats) > 0:
-        rss_avg, rss_max = summarize_memory(memory_stats, 'rss')
-        gpu_cur_avg, gpu_cur_max = summarize_memory(memory_stats, 'gpu_current')
-        gpu_peak_avg, gpu_peak_max = summarize_memory(memory_stats, 'gpu_peak')
-        logging.info("\n平均内存统计:")
-        if rss_avg is not None:
-            logging.info("  常驻内存: 平均 %.1fMB, 峰值 %.1fMB", rss_avg, rss_max)
-        if gpu_cur_avg is not None:
-            logging.info("  GPU当前占用: 平均 %.1fMB, 峰值 %.1fMB", gpu_cur_avg, gpu_cur_max)
-        if gpu_peak_avg is not None:
-            logging.info("  GPU峰值记录: 平均 %.1fMB, 最大 %.1fMB", gpu_peak_avg, gpu_peak_max)
+    # if runtime_memory_peak is not None:
+    #     logging.info("\n特征提取运行内存峰值(准备基准增量): %s", format_memory_value(runtime_memory_peak))
+    if steady_state_deltas:
+        steady_state_avg = np.mean(steady_state_deltas)
+        steady_state_peak_final = steady_state_peak if steady_state_peak is not None else np.max(steady_state_deltas)
+        logging.info("稳态基准增量平均值: %s", format_memory_value(steady_state_avg))
+        logging.info("稳态基准增量峰值: %s", format_memory_value(steady_state_peak_final))
     return  
 
 # 入口：根据模式运行

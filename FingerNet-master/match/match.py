@@ -8,11 +8,25 @@ import cv2
 import numpy as np
 import os
 import pickle
+import warnings
+import logging
 from typing import List, Tuple, Dict, Optional, Any
 from dataclasses import dataclass, field
 import matplotlib
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.pyplot as plt
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+logging.getLogger("matplotlib.font_manager").setLevel(logging.ERROR)
+
+_matching_memory_tracker = {
+    'initial': None,
+    'initial_deltas': [],
+    'initial_peak': None,
+    'steady': None,
+    'steady_deltas': [],
+    'steady_peak': None
+}
 try:
     import psutil  # type: ignore
 except ImportError:
@@ -59,20 +73,60 @@ def format_memory_value(value: Optional[float]) -> str:
     return f"{value:.1f}MB" if value is not None else "N/A"
 
 
-def record_memory(records: List[Dict[str, Optional[float]]], label: str):
-    snapshot = collect_memory_snapshot()
-    snapshot['label'] = label
-    records.append(snapshot)
-    print(f"[内存] {label} - 常驻: {format_memory_value(snapshot['rss'])}, "
-          f"GPU当前: {format_memory_value(snapshot['gpu_current'])}, "
-          f"GPU峰值: {format_memory_value(snapshot['gpu_peak'])}")
+def _log_matching_memory(label: str,
+                         before: Optional[Dict[str, Optional[float]]],
+                         after: Optional[Dict[str, Optional[float]]]):
+    if after is None:
+        print(f"[内存] {label} - 运行增量: N/A (无法采样)")
+        return
+    tracker = _matching_memory_tracker
+    if tracker['initial'] is None and before is not None:
+        tracker['initial'] = before
+        print(f"[内存] 初始化基准 - 常驻: {format_memory_value(before.get('rss'))}, "
+              f"GPU当前: {format_memory_value(before.get('gpu_current'))}, "
+              f"GPU峰值: {format_memory_value(before.get('gpu_peak'))}")
+    initial_delta = None
+    if (tracker['initial'] and tracker['initial'].get('rss') is not None and
+            after.get('rss') is not None):
+        initial_delta = max(0.0, after['rss'] - tracker['initial']['rss'])
+        tracker['initial_deltas'].append(initial_delta)
+        if tracker['initial_peak'] is None or initial_delta > tracker['initial_peak']:
+            tracker['initial_peak'] = initial_delta
+    steady_delta = None
+    if tracker['steady'] is None:
+        tracker['steady'] = after
+        tracker['steady_deltas'].append(0.0)
+        tracker['steady_peak'] = 0.0
+        print(f"[内存] 稳态基准 - 常驻: {format_memory_value(after.get('rss'))}, "
+              f"GPU当前: {format_memory_value(after.get('gpu_current'))}, "
+              f"GPU峰值: {format_memory_value(after.get('gpu_peak'))}")
+    else:
+        if tracker['steady'].get('rss') is not None and after.get('rss') is not None:
+            steady_delta = max(0.0, after['rss'] - tracker['steady']['rss'])
+            tracker['steady_deltas'].append(steady_delta)
+            if tracker['steady_peak'] is None or steady_delta > tracker['steady_peak']:
+                tracker['steady_peak'] = steady_delta
+    print(f"[内存] {label} - 准备基准增量: {format_memory_value(initial_delta)}, "
+          f"稳态基准增量: {format_memory_value(steady_delta)}, "
+          f"GPU当前: {format_memory_value(after.get('gpu_current'))}, "
+          f"GPU峰值: {format_memory_value(after.get('gpu_peak'))}")
 
 
-def summarize_memory(records: List[Dict[str, Optional[float]]], key: str) -> Tuple[Optional[float], Optional[float]]:
-    values = [rec[key] for rec in records if rec.get(key) is not None]
-    if not values:
-        return None, None
-    return float(np.mean(values)), float(np.max(values))
+def print_matching_memory_summary():
+    tracker = _matching_memory_tracker
+    if tracker['initial_deltas']:
+        initial_avg = float(np.mean(tracker['initial_deltas']))
+        initial_peak = tracker['initial_peak'] if tracker['initial_peak'] is not None else float(np.max(tracker['initial_deltas']))
+        print("\n匹配运行内存统计:")
+        print(f"  准备基准增量平均值: {format_memory_value(initial_avg)}")
+        print(f"  准备基准增量峰值: {format_memory_value(initial_peak)}")
+    if tracker['steady_deltas']:
+        avg = float(np.mean(tracker['steady_deltas']))
+        peak = tracker['steady_peak'] if tracker['steady_peak'] is not None else float(np.max(tracker['steady_deltas']))
+        if not tracker['initial_deltas']:
+            print("\n匹配运行内存统计:")
+        print(f"  稳态基准增量平均值: {format_memory_value(avg)}")
+        print(f"  稳态基准增量峰值: {format_memory_value(peak)}")
 
 
 @dataclass
@@ -82,7 +136,7 @@ class Minutia:
     y: float
     orientation: float  # 弧度
     confidence: float
-    minutia_type: int = 0  # 0: 端点, 1: 分叉点
+    # minutia_type: int = 0  # 0: 端点, 1: 分叉点
 
 
 @dataclass
@@ -118,7 +172,19 @@ class TemplateMatcher:
                  max_distance: float = 40.0,  # 减小距离容差，提高匹配精度
                  match_threshold: float = 0.65,  # 平衡的默认阈值
                  ransac_runs: int = 3,  # RANSAC运行次数，多次运行取最佳结果以提高稳定性
-                 templates_per_finger: int = 1):  # 每个手指用于模板的样本数量（固定 enrollment）
+                 templates_per_finger: int = 1,  # 每个手指用于模板的样本数量（固定 enrollment）
+                 estimated_inlier_ratio: float = 0.3,
+                 min_inliers_for_early_stop_ratio: float = 1.0 / 3.0,
+                 min_inliers_for_early_stop_min: int = 5,
+                 min_iterations_before_stop_ratio: float = 0.3,
+                 min_iterations_before_stop_min: int = 50,
+                 early_stop_inlier_ratio: float = 0.75,
+                 required_consecutive: int = 3,
+                 min_inliers_for_result: int = 5,
+                 min_inlier_ratio_for_result: float = 0.3,
+                 scale_min: float = 0.3,
+                 scale_max: float = 3.0,
+                 spread_min_radius: float = 15.0):
         """
         初始化模板匹配器
         
@@ -132,6 +198,18 @@ class TemplateMatcher:
             match_threshold: 模板匹配阈值
             ransac_runs: RANSAC运行次数，多次运行取最佳结果以提高稳定性（默认: 3）
             templates_per_finger: 每个手指用于模板的样本数量（固定 enrollment，默认: 1）
+            estimated_inlier_ratio: 估计的内点比例，用于RANSAC迭代次数估计
+            min_inliers_for_early_stop_ratio: 提前停止所需内点比例
+            min_inliers_for_early_stop_min: 提前停止所需最低内点数量
+            min_iterations_before_stop_ratio: 提前停止前至少执行的迭代占比
+            min_iterations_before_stop_min: 提前停止前至少执行的最小迭代数
+            early_stop_inlier_ratio: 满足提前停止的内点比例阈值
+            required_consecutive: 满足提前停止条件所需的连续次数
+            min_inliers_for_result: 接受结果所需的最小内点数
+            min_inlier_ratio_for_result: 接受结果所需的最小内点比例
+            scale_min: 仿射缩放因子下限
+            scale_max: 仿射缩放因子上限
+            spread_min_radius: 内点分布半径阈值
         """
         self.k_neighbors = k_neighbors
         self.template_radius = template_radius
@@ -142,6 +220,18 @@ class TemplateMatcher:
         self.match_threshold = match_threshold
         self.ransac_runs = ransac_runs  # RANSAC运行次数
         self.templates_per_finger = max(1, templates_per_finger)
+        self.estimated_inlier_ratio = estimated_inlier_ratio
+        self.min_inliers_for_early_stop_ratio = min_inliers_for_early_stop_ratio
+        self.min_inliers_for_early_stop_min = max(1, min_inliers_for_early_stop_min)
+        self.min_iterations_before_stop_ratio = min_iterations_before_stop_ratio
+        self.min_iterations_before_stop_min = max(1, min_iterations_before_stop_min)
+        self.early_stop_inlier_ratio = early_stop_inlier_ratio
+        self.required_consecutive = max(1, required_consecutive)
+        self.min_inliers_for_result = max(1, min_inliers_for_result)
+        self.min_inlier_ratio_for_result = max(0.0, min(1.0, min_inlier_ratio_for_result))
+        self.scale_min = min(scale_min, scale_max)
+        self.scale_max = max(scale_min, scale_max)
+        self.spread_min_radius = max(1e-6, spread_min_radius)
     
     def _calculate_angle_difference(self, angle1: float, angle2: float) -> float:
         """计算两个角度之间的最小差值（考虑角度环绕）"""
@@ -464,7 +554,7 @@ class TemplateMatcher:
         for run in range(self.ransac_runs):
             # RANSAC参数
             inlier_threshold = self.max_distance
-            estimated_inlier_ratio = 0.3
+            estimated_inlier_ratio = self.estimated_inlier_ratio
             
             # 计算最大迭代次数，避免log(0)或log(负数)的问题
             if estimated_inlier_ratio > 0 and estimated_inlier_ratio < 1:
@@ -476,11 +566,17 @@ class TemplateMatcher:
                 max_iterations = 500  # 默认值
             
             # 改进的提前停止条件：更严格，避免过早停止导致结果不稳定
-            min_inliers_for_early_stop = max(5, len(matches) // 3)  # 提高最小内点数要求
-            min_iterations_before_stop = max(50, int(max_iterations * 0.3))  # 至少运行30%的迭代次数
-            early_stop_inlier_ratio = 0.75  # 提高内点比例要求到75%（更严格）
+            min_inliers_for_early_stop = max(
+                self.min_inliers_for_early_stop_min,
+                int(len(matches) * self.min_inliers_for_early_stop_ratio)
+            )  # 提高最小内点数要求
+            min_iterations_before_stop = max(
+                self.min_iterations_before_stop_min,
+                int(max_iterations * self.min_iterations_before_stop_ratio)
+            )  # 至少运行指定比例的迭代次数
+            early_stop_inlier_ratio = self.early_stop_inlier_ratio  # 提高内点比例要求
             consecutive_good_iterations = 0  # 连续满足条件的迭代次数
-            required_consecutive = 3  # 要求连续3次满足条件才停止
+            required_consecutive = self.required_consecutive  # 要求连续满足条件才停止
             
             best_transform = None
             best_inliers = 0
@@ -571,11 +667,11 @@ class TemplateMatcher:
                 inlier_ratio = best_inliers / len(matches)
                 
                 # 提高要求：至少5个内点（减少false positive）
-                if best_inliers < 5:
+                if best_inliers < self.min_inliers_for_result:
                     continue  # 本次运行失败，继续下一次运行
                 
                 # 提高内点比例要求到30%（收紧几何验证条件）
-                if inlier_ratio < 0.3:
+                if inlier_ratio < self.min_inlier_ratio_for_result:
                     continue  # 本次运行失败，继续下一次运行
                 
                 # 计算变换矩阵的质量（检查是否合理）
@@ -584,7 +680,8 @@ class TemplateMatcher:
                 scale_y = np.sqrt(best_transform[0, 1]**2 + best_transform[1, 1]**2)
                 
                 # 缩放因子应该在合理范围内（放宽到0.3-3.0）
-                if scale_x < 0.3 or scale_x > 3.0 or scale_y < 0.3 or scale_y > 3.0:
+                if (scale_x < self.scale_min or scale_x > self.scale_max or
+                        scale_y < self.scale_min or scale_y > self.scale_max):
                     continue  # 本次运行失败，继续下一次运行
                 
                 # 改进的分数计算（更平衡）
@@ -605,8 +702,8 @@ class TemplateMatcher:
                     )
                     avg_spread = np.mean(distances_inlier)
                     # 放宽分布要求
-                    if avg_spread < 15.0:  # 平均分布半径小于15像素
-                        spread_factor = avg_spread / 15.0
+                    if avg_spread < self.spread_min_radius:  # 平均分布半径小于阈值
+                        spread_factor = avg_spread / self.spread_min_radius
                     else:
                         spread_factor = 1.0
                 else:
@@ -727,7 +824,8 @@ class TemplateMatcher:
     def match_with_stored_template(self, 
                                   stored_template_file: str,
                                   query_minutiae: List[Minutia],
-                                  exclude_query_sample_id: Optional[str] = None) -> MatchResult:
+                                  exclude_query_sample_id: Optional[str] = None,
+                                  memory_probe_label: Optional[str] = None) -> MatchResult:
         """
         使用存储的模板进行匹配（支持单模板和多模板）
         
@@ -747,6 +845,9 @@ class TemplateMatcher:
         
         # 为查询指纹构建模板
         query_templates = self.compute_templates(query_minutiae)
+        memory_probe_active = memory_probe_label is not None
+        memory_probe_done = False
+        memory_probe_before = None
         
         # 统一处理：与所有模板匹配并取最佳结果（单模板和多模板统一处理）
         best_result = None
@@ -763,14 +864,24 @@ class TemplateMatcher:
                     continue  # 跳过这个模板，避免自己匹配自己
             
             # 模板匹配
+            if memory_probe_active and not memory_probe_done:
+                memory_probe_before = collect_memory_snapshot()
             matches = self.find_template_matches(stored_templates, query_templates, 
                                                 stored_minutiae, query_minutiae)
             
             if len(matches) == 0:
+                if memory_probe_active and not memory_probe_done:
+                    after_snapshot = collect_memory_snapshot()
+                    _log_matching_memory(memory_probe_label, memory_probe_before, after_snapshot)
+                    memory_probe_done = True
                 continue
             
             # 几何验证
             result = self.geometric_verification(stored_minutiae, query_minutiae, matches)
+            if memory_probe_active and not memory_probe_done:
+                after_snapshot = collect_memory_snapshot()
+                _log_matching_memory(memory_probe_label, memory_probe_before, after_snapshot)
+                memory_probe_done = True
             
             # 保留最佳结果（优先考虑分数，如果分数相同则考虑内点数）
             should_update = False
@@ -815,7 +926,8 @@ class TemplateMatcher:
     
     def match_fingerprints(self,
                           minutiae1: List[Minutia],
-                          minutiae2: List[Minutia]) -> MatchResult:
+                          minutiae2: List[Minutia],
+                          memory_probe_label: Optional[str] = None) -> MatchResult:
         """
         匹配两个指纹（模板匹配方法）
         
@@ -829,15 +941,28 @@ class TemplateMatcher:
         # 构建局部模板
         templates1 = self.compute_templates(minutiae1)
         templates2 = self.compute_templates(minutiae2)
+        memory_probe_active = memory_probe_label is not None
+        memory_probe_done = False
+        memory_probe_before = None
         
         # 模板匹配
+        if memory_probe_active:
+            memory_probe_before = collect_memory_snapshot()
         matches = self.find_template_matches(templates1, templates2, minutiae1, minutiae2)
         
         if len(matches) == 0:
+            if memory_probe_active and not memory_probe_done:
+                after_snapshot = collect_memory_snapshot()
+                _log_matching_memory(memory_probe_label, memory_probe_before, after_snapshot)
+                memory_probe_done = True
             return MatchResult(0.0, 0, np.eye(3), [], 0.0)
         
         # 几何验证
         result = self.geometric_verification(minutiae1, minutiae2, matches)
+        if memory_probe_active and not memory_probe_done:
+            after_snapshot = collect_memory_snapshot()
+            _log_matching_memory(memory_probe_label, memory_probe_before, after_snapshot)
+            memory_probe_done = True
         return result
     
     def is_match_successful(self, score: float, threshold: Optional[float] = None) -> bool:
@@ -920,8 +1045,6 @@ class TemplateMatcher:
 
 def demo_matching():
     """演示模板匹配功能"""
-    memory_records: List[Dict[str, Optional[float]]] = []
-    record_memory(memory_records, "脚本启动")
     # 创建模板匹配器（使用默认参数，match_threshold=0.65）
     matcher = TemplateMatcher(
         k_neighbors=5,  # 局部模板使用5个最近邻
@@ -933,7 +1056,6 @@ def demo_matching():
         match_threshold=0.65,  # 模板匹配阈值0.65（与默认值一致）
         templates_per_finger=1
     )
-    record_memory(memory_records, "创建匹配器")
     
     print("指纹模板匹配演示")
     print("="*50)
@@ -959,7 +1081,6 @@ def demo_matching():
     
     minutiae1 = matcher.load_minutiae_from_mnt(mnt1_path)
     minutiae2 = matcher.load_minutiae_from_mnt(mnt2_path)
-    record_memory(memory_records, "加载图像与细节点")
     
     if not minutiae1 or not minutiae2:
         print("错误：无法加载细节点数据")
@@ -970,8 +1091,7 @@ def demo_matching():
     
     # 执行模板匹配
     print("\n开始模板匹配...")
-    result = matcher.match_fingerprints(minutiae1, minutiae2)
-    record_memory(memory_records, "匹配完成")
+    result = matcher.match_fingerprints(minutiae1, minutiae2, memory_probe_label="查询匹配工作区")
     
     # 输出结果
     print(f"\n匹配结果:")
@@ -1002,22 +1122,7 @@ def demo_matching():
         image2_label=os.path.basename(image2_path)
     )
     print("匹配结果已保存为 match_result.png")
-    record_memory(memory_records, "可视化完成")
-    
-    print("\n内存统计:")
-    for rec in memory_records:
-        print(f"  - {rec['label']}: 常驻 {format_memory_value(rec.get('rss'))}, "
-              f"GPU当前 {format_memory_value(rec.get('gpu_current'))}, "
-              f"GPU峰值 {format_memory_value(rec.get('gpu_peak'))}")
-    rss_avg, rss_max = summarize_memory(memory_records, 'rss')
-    gpu_cur_avg, gpu_cur_max = summarize_memory(memory_records, 'gpu_current')
-    gpu_peak_avg, gpu_peak_max = summarize_memory(memory_records, 'gpu_peak')
-    if rss_avg is not None:
-        print(f"  平均常驻内存: {rss_avg:.1f}MB (峰值 {rss_max:.1f}MB)")
-    if gpu_cur_avg is not None:
-        print(f"  平均GPU占用: {gpu_cur_avg:.1f}MB (峰值 {gpu_cur_max:.1f}MB)")
-    if gpu_peak_avg is not None:
-        print(f"  GPU记录峰值: {gpu_peak_avg:.1f}MB (最大 {gpu_peak_max:.1f}MB)")
+    print_matching_memory_summary()
 
 
 if __name__ == "__main__":
