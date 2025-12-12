@@ -1020,7 +1020,15 @@ def deploy(deploy_set, set_name=None, image_format=None):
     except Exception as e:
         logging.warning("预热阶段出现异常：%s", e)
 
-    logging.info("\n3. 输入图像内存占用:")
+    # -------- 6. 记录预热后的内存基线 --------
+    logging.info("\n3. 建立内存基线（预热后）...")
+    baseline_snapshot = collect_memory_snapshot()
+    if baseline_snapshot and baseline_snapshot.get('rss'):
+        logging.info("   进程常驻内存(RSS): %s", format_memory_value(baseline_snapshot.get('rss')))
+    else:
+        logging.warning("   无法获取内存基线")
+    
+    logging.info("\n4. 输入图像内存占用:")
     input_memory_mb = tensor_memory_mb(warmup_image)
     logging.info("   输入尺寸: %dx%d, 内存: %.2f MB (float32)", img_size[0], img_size[1], input_memory_mb)
     logging.info("   -> 若输入 uint8，内存约: %.2f MB", input_memory_mb / 4)
@@ -1028,6 +1036,7 @@ def deploy(deploy_set, set_name=None, image_format=None):
     # 用于时间与内存统计
     time_stats = []
     feature_memory_stats = []
+    minutiae_counts = []
 
     # -------- 6. 逐张图像处理 --------
     for idx, name in enumerate(img_name):
@@ -1093,6 +1102,7 @@ def deploy(deploy_set, set_name=None, image_format=None):
             avg_conf = float(np.mean(mnt_nms[:, 3]))
             max_conf = float(np.max(mnt_nms[:, 3]))
             logging.info("细节点置信度 - 平均: %.3f, 最大: %.3f", avg_conf, max_conf)
+        minutiae_counts.append(len(mnt_nms))
 
         # 8) 保存 .mnt 文件
         t_save_mnt_start = time()
@@ -1168,7 +1178,14 @@ def deploy(deploy_set, set_name=None, image_format=None):
             'core': core_time,
         })
 
-        # 13) 统计移动端关键内存：输入+输出特征图
+        # 13) 统计内存增量及组成部分
+        # 记录处理后的总内存增量
+        snap_after_process = collect_memory_snapshot()
+        total_rss_delta = 0.0
+        if snap_after_process and baseline_snapshot and snap_after_process.get('rss') and baseline_snapshot.get('rss'):
+            total_rss_delta = snap_after_process['rss'] - baseline_snapshot['rss']
+        
+        # 统计算法数据内存
         input_mem = tensor_memory_mb(image)
         
         # 输出特征图内存
@@ -1192,80 +1209,94 @@ def deploy(deploy_set, set_name=None, image_format=None):
         ])
         
         total_feature_mb = output_feature_mb + post_process_mb
+        total_algorithm_mb = input_mem + total_feature_mb
+        framework_overhead_mb = total_rss_delta - total_algorithm_mb
         
         # 记录详细统计
         feature_memory_stats.append({
+            'total_rss_delta': total_rss_delta,
             'input': input_mem,
             'output': output_feature_mb,
             'post_process': post_process_mb,
-            'total': total_feature_mb,
+            'algorithm_total': total_algorithm_mb,
+            'framework_overhead': framework_overhead_mb,
             'details': output_details + post_details
         })
         
-        logging.info("【内存统计】")
-        logging.info("  输入图像: %.2f MB", input_mem)
-        logging.info("  网络输出特征图: %.2f MB", output_feature_mb)
+        logging.info("【内存增量统计】(相对预热基线)")
+        logging.info("  总内存增量(RSS): %.2f MB", total_rss_delta)
+        logging.info("")
+        logging.info("  组成部分:")
+        logging.info("  ├─ 算法数据: %.2f MB (移动端参考)", total_algorithm_mb)
+        logging.info("  │   ├─ 输入图像: %.2f MB", input_mem)
+        logging.info("  │   ├─ 网络输出特征图: %.2f MB", output_feature_mb)
         for name, size_mb in output_details:
-            logging.info("    - %s: %.2f MB", name, size_mb)
-        logging.info("  后处理中间结果: %.2f MB", post_process_mb)
+            logging.info("  │   │   ├─ %s: %.2f MB", name, size_mb)
+        logging.info("  │   └─ 后处理中间结果: %.2f MB", post_process_mb)
         for name, size_mb in post_details:
-            logging.info("    - %s: %.2f MB", name, size_mb)
-        logging.info("  特征图总计: %.2f MB", total_feature_mb)
-        logging.info("  单帧内存峰值 ≈ 权重(%.2f MB) + 输入(%.2f MB) + 特征图(%.2f MB) = %.2f MB", 
-                     weight_size_mb, input_mem, total_feature_mb, 
-                     weight_size_mb + input_mem + total_feature_mb)
+            logging.info("  │       ├─ %s: %.2f MB", name, size_mb)
+        logging.info("  │")
+        logging.info("  └─ 框架开销: %.2f MB (移动端忽略)", framework_overhead_mb)
+        logging.info("      (TensorFlow运行时、Python对象、内存对齐等)")
+        logging.info("")
+        logging.info("  移动端内存预算: 权重(%.2f MB) + 算法数据(%.2f MB) = %.2f MB", 
+                     weight_size_mb, total_algorithm_mb, weight_size_mb + total_algorithm_mb)
 
     # -------- 7. 全局平均时间与内存统计 --------
     logging.info("\n")
     logging.info("="*60)
-    logging.info("【移动端内存预算总结】")
+    logging.info("【移动端内存预算总结】(基于 %d 张图像)", len(feature_memory_stats) if feature_memory_stats else 0)
     logging.info("="*60)
+    if minutiae_counts:
+        logging.info("平均细节点数量（NMS后）: %.1f", float(np.mean(minutiae_counts)))
     
     if feature_memory_stats:
+        # 统计各部分的平均值和峰值
+        avg_rss_delta = float(np.mean([stat['total_rss_delta'] for stat in feature_memory_stats]))
         avg_input = float(np.mean([stat['input'] for stat in feature_memory_stats]))
         avg_output = float(np.mean([stat['output'] for stat in feature_memory_stats]))
         avg_post = float(np.mean([stat['post_process'] for stat in feature_memory_stats]))
-        avg_total = float(np.mean([stat['total'] for stat in feature_memory_stats]))
+        avg_algorithm = float(np.mean([stat['algorithm_total'] for stat in feature_memory_stats]))
+        avg_framework = float(np.mean([stat['framework_overhead'] for stat in feature_memory_stats]))
         
+        max_rss_delta = float(np.max([stat['total_rss_delta'] for stat in feature_memory_stats]))
         max_input = float(np.max([stat['input'] for stat in feature_memory_stats]))
         max_output = float(np.max([stat['output'] for stat in feature_memory_stats]))
         max_post = float(np.max([stat['post_process'] for stat in feature_memory_stats]))
-        max_total = float(np.max([stat['total'] for stat in feature_memory_stats]))
+        max_algorithm = float(np.max([stat['algorithm_total'] for stat in feature_memory_stats]))
+        max_framework = float(np.max([stat['framework_overhead'] for stat in feature_memory_stats]))
         
-        logging.info("\n内存占用统计（基于 %d 张图像）:", len(feature_memory_stats))
-        logging.info("\n  各部分平均内存:")
-        logging.info("    模型权重: %.2f MB (float32)", weight_size_mb)
-        logging.info("    输入图像: %.2f MB", avg_input)
-        logging.info("    网络输出特征图: %.2f MB", avg_output)
-        logging.info("    后处理中间结果: %.2f MB", avg_post)
-        logging.info("    特征图小计: %.2f MB", avg_total)
-        logging.info("    ---")
-        logging.info("    单帧内存峰值(平均): %.2f MB", weight_size_mb + avg_input + avg_total)
+        logging.info("\n1. 总内存增量 (RSS相对预热基线):")
+        logging.info("   平均: %.2f MB, 峰值: %.2f MB", avg_rss_delta, max_rss_delta)
         
-        logging.info("\n  各部分峰值内存:")
-        logging.info("    模型权重: %.2f MB (float32)", weight_size_mb)
-        logging.info("    输入图像: %.2f MB", max_input)
-        logging.info("    网络输出特征图: %.2f MB", max_output)
-        logging.info("    后处理中间结果: %.2f MB", max_post)
-        logging.info("    特征图小计: %.2f MB", max_total)
-        logging.info("    ---")
-        logging.info("    单帧内存峰值(最大): %.2f MB", weight_size_mb + max_input + max_total)
+        logging.info("\n2. 算法数据内存 (移动端参考):")
+        logging.info("   平均: %.2f MB, 峰值: %.2f MB", avg_algorithm, max_algorithm)
+        logging.info("   组成:")
+        logging.info("     - 输入图像: 平均 %.2f MB, 峰值 %.2f MB", avg_input, max_input)
+        logging.info("     - 网络输出特征图: 平均 %.2f MB, 峰值 %.2f MB", avg_output, max_output)
+        logging.info("     - 后处理中间结果: 平均 %.2f MB, 峰值 %.2f MB", avg_post, max_post)
         
-        logging.info("\n  移动端优化建议:")
-        logging.info("    - float16 量化: 权重减半，总内存约 %.2f MB", 
-                     weight_size_mb/2 + max_input + max_total)
-        logging.info("    - int8 量化: 权重减至1/4，总内存约 %.2f MB", 
-                     weight_size_mb/4 + max_input + max_total)
-        logging.info("    - 输入改用 uint8: 输入内存减至1/4，总内存约 %.2f MB", 
-                     weight_size_mb + max_input/4 + max_total)
-        logging.info("    - 降低输入分辨率 50%%: 特征图约减至1/4，总内存约 %.2f MB",
-                     weight_size_mb + max_input/4 + max_total/4)
+        logging.info("\n3. 框架开销 (移动端忽略):")
+        logging.info("   平均: %.2f MB, 峰值: %.2f MB", avg_framework, max_framework)
+        logging.info("   (TensorFlow运行时、Python对象、内存对齐等)")
+        
+        logging.info("\n4. 移动端内存预算:")
+        logging.info("   平均: 权重(%.2f MB) + 算法数据(%.2f MB) = %.2f MB", 
+                     weight_size_mb, avg_algorithm, weight_size_mb + avg_algorithm)
+        logging.info("   峰值: 权重(%.2f MB) + 算法数据(%.2f MB) = %.2f MB", 
+                     weight_size_mb, max_algorithm, weight_size_mb + max_algorithm)
+        
+        # logging.info("\n5. 优化建议:")
+        # logging.info("   - float16量化: 权重减半，总内存约 %.2f MB", weight_size_mb/2 + max_algorithm)
+        # logging.info("   - int8量化: 权重减至1/4，总内存约 %.2f MB", weight_size_mb/4 + max_algorithm)
+        # logging.info("   - 输入uint8: 输入内存减至1/4，总内存约 %.2f MB", weight_size_mb + max_algorithm - max_input*3/4)
+        # logging.info("   - 降低分辨率50%%: 特征图约减至1/4，总内存约 %.2f MB", weight_size_mb + max_algorithm/4)
         
         # 输出详细的特征图分解（取第一张图的数据）
         if len(feature_memory_stats) > 0:
-            logging.info("\n  详细特征图内存分解（首张图）:")
+            logging.info("\n6. 详细特征图分解（首张图）:")
             for name, size_mb in feature_memory_stats[0]['details']:
-                logging.info("    - %-25s: %6.2f MB", name, size_mb)
+                logging.info("   - %-25s: %6.2f MB", name, size_mb)
     
     if time_stats:
         avg_times = {}
