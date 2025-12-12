@@ -1303,6 +1303,10 @@ def deploy(deploy_set, set_name=None, image_format=None):
         for key in time_stats[0].keys():
             avg_times[key] = float(np.mean([stat[key] for stat in time_stats]))
 
+        core_times = [stat['core'] for stat in time_stats]
+        min_core = float(np.min(core_times))
+        max_core = float(np.max(core_times))
+
         logging.info("\n性能统计（平均耗时）:")
         logging.info("  图像预处理: %.1fms", avg_times['preprocess'] * 1000)
         logging.info("  网络推理: %.1fms", avg_times['network'] * 1000)
@@ -1310,7 +1314,7 @@ def deploy(deploy_set, set_name=None, image_format=None):
         logging.info("  细节点提取: %.1fms", avg_times['mnt_extract'] * 1000)
         logging.info("  NMS处理: %.1fms", avg_times['nms'] * 1000)
         logging.info("  方向计算: %.1fms", avg_times['ori'] * 1000)
-        logging.info("  核心总计: %.1fms", avg_times['core'] * 1000)
+        logging.info("  核心总计: 平均 %.1fms, 最短 %.1fms, 最长 %.1fms", avg_times['core'] * 1000, min_core * 1000, max_core * 1000)
     
     logging.info("="*60)
     return
