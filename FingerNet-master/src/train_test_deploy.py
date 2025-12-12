@@ -951,6 +951,14 @@ def test(test_set, model, outdir, test_num=10, draw=True):
 
 # 部署：对未标注数据进行预测，导出可视化与结构化结果
 def deploy(deploy_set, set_name=None, image_format=None):
+    """
+    部署模式（移动端内存评估版）：
+    - 扫描 deploy_set 目录中的指纹图像
+    - 对每张图执行：预处理 -> 网络前向 -> 分割后处理 -> 细节点提取 + NMS -> 可视化与结果保存
+    - 统计移动端关键内存指标：权重大小、输入图像内存、各层特征图内存
+    - 忽略 Python/TF 进程开销，专注于算法本身的刚性内存需求
+    """
+    # -------- 1. 解析数据集名称与输出目录 --------
     if set_name is None:
         # 从路径中提取数据集名称（处理末尾斜杠）
         deploy_set_normalized = deploy_set.rstrip('/')
@@ -958,142 +966,192 @@ def deploy(deploy_set, set_name=None, image_format=None):
         # 如果提取失败，使用默认名称
         if not set_name:
             set_name = deploy_set_normalized.split('/')[-2] if '/' in deploy_set_normalized else 'dataset'
-    mkdir(output_dir+'/'+set_name+'/')
-    logging.info("Predicting %s:"%(set_name)) 
-    
-    # 查找图像文件
+    mkdir(os.path.join(output_dir, set_name))
+    logging.info("Predicting %s", set_name)
+
+    # -------- 2. 查找图像文件 --------
     files, img_name, detected_format = find_image_files(deploy_set, image_format)
     if len(img_name) == 0:
-        deploy_set = deploy_set+'images/'
+        # 兼容原始结构：尝试在子目录 images/ 下寻找
+        deploy_set = os.path.join(deploy_set, 'images/')
         files, img_name, detected_format = find_image_files(deploy_set, image_format)
-    
+
     if len(img_name) == 0:
         raise ValueError(f"在 {deploy_set} 中未找到任何图像文件！")
-    
+
     if image_format is None:
         image_format = detected_format
-    
-    logging.info(f"检测到图像格式: {image_format} ({len(img_name)} 个文件)")
-    
-    # 读取第一个文件获取尺寸
+
+    logging.info("检测到图像格式: %s (%d 个文件)", image_format, len(img_name))
+
+    # -------- 3. 读取第一张图，确定网络输入尺寸 --------
     img = load_image_file('', img_name[0], deploy_set, image_format)
     if img is None:
         raise FileNotFoundError(f"无法加载图像文件: {deploy_set}{img_name[0]}")
+
+    img_size = np.array(img.shape, dtype=np.int32)
+    # 使用整除保持整数尺寸，避免传入 Keras 的浮点形状，且与 8 对齐
+    img_size = (img_size // 8 * 8).astype(np.int32)
+
+    # 构建网络
+    main_net_model = get_main_net((img_size[0], img_size[1], 1), pretrain)
+
+    # -------- 4. 统计模型权重大小 --------
+    logging.info("="*60)
+    logging.info("【移动端内存预算评估】")
+    logging.info("="*60)
     
-    img_size = img.shape
-    # 使用整除保持整数尺寸，避免传入 Keras 的浮点形状
-    img_size = (np.array(img_size, dtype=np.int32)//8*8).astype(np.int32)      
-    main_net_model = get_main_net((img_size[0],img_size[1],1), pretrain)
-    
+    if os.path.exists(pretrain):
+        weight_size_mb = os.path.getsize(pretrain) / MB_IN_BYTES
+        logging.info("1. 模型权重文件大小: %.2f MB (float32)", weight_size_mb)
+        logging.info("   -> float16 量化后约: %.2f MB", weight_size_mb / 2)
+        logging.info("   -> int8 量化后约: %.2f MB", weight_size_mb / 4)
+    else:
+        logging.warning("预训练模型文件不存在，无法统计权重大小")
+        weight_size_mb = 0.0
+
+    # -------- 5. 预热阶段（避免首次推理的初始化开销干扰统计） --------
+    logging.info("\n2. 网络预热（消除首次推理开销）...")
+    try:
+        warmup_image = np.zeros((1, img_size[0], img_size[1], 1), dtype=np.float32)
+        for i in range(3):
+            _ = main_net_model.predict(warmup_image)
+            logging.info("   预热轮次 %d/3 完成", i+1)
+    except Exception as e:
+        logging.warning("预热阶段出现异常：%s", e)
+
+    logging.info("\n3. 输入图像内存占用:")
+    input_memory_mb = tensor_memory_mb(warmup_image)
+    logging.info("   输入尺寸: %dx%d, 内存: %.2f MB (float32)", img_size[0], img_size[1], input_memory_mb)
+    logging.info("   -> 若输入 uint8，内存约: %.2f MB", input_memory_mb / 4)
+
+    # 用于时间与内存统计
     time_stats = []
-    baseline_memory_snapshot = collect_memory_snapshot()
-    if baseline_memory_snapshot:
-        logging.info("准备阶段内存 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
-                     format_memory_value(baseline_memory_snapshot['rss']),
-                     format_memory_value(baseline_memory_snapshot['gpu_current']),
-                     format_memory_value(baseline_memory_snapshot['gpu_peak']))
-    runtime_memory_peak = None
-    steady_state_baseline_snapshot = None
-    steady_state_deltas = []
-    steady_state_peak = None
-    for i in range(0,len(img_name)):
-        logging.info("%s %d / %d: %s"%(set_name, i+1, len(img_name), img_name[i]))
-        time_start = time()
-        
-        # 1. 读取图像文件
-        time_load_start = time()
-        image = load_image_file('', img_name[i], deploy_set, image_format)
+    feature_memory_stats = []
+
+    # -------- 6. 逐张图像处理 --------
+    for idx, name in enumerate(img_name):
+        logging.info("%s %d / %d: %s", set_name, idx + 1, len(img_name), name)
+
+        # 1) 读图
+        t_load_start = time()
+        image = load_image_file('', name, deploy_set, image_format)
         if image is None:
-            logging.warning(f"跳过无法加载的文件: {img_name[i]}")
+            logging.warning("跳过无法加载的文件: %s", name)
             continue
-        time_load_end = time()
-        time_load_image = time_load_end - time_load_start
-        
-        # 2. 图像预处理（归一化、裁剪、reshape）
-        time_preprocess_start = time()
+        t_load_end = time()
+        time_load_image = t_load_end - t_load_start
+
+        # 2) 预处理：归一化 + 裁剪 + reshape
+        t_pre_start = time()
         image = image / 255.0
-        image = image[:img_size[0],:img_size[1]]      
-        image = np.reshape(image,[1, image.shape[0], image.shape[1], 1])
-        time_preprocess_end = time()
-        time_preprocess = time_preprocess_end - time_preprocess_start
-        
-        # 3. 网络推理
-        time_network_start = time()
-        enhance_img, ori_out_1, ori_out_2, seg_out, mnt_o_out, mnt_w_out, mnt_h_out, mnt_s_out = main_net_model.predict(image) 
-        time_network_end = time()
-        time_network = time_network_end - time_network_start
-        
-        # 4. 分割后处理
-        time_seg_post_start = time()
+        image = image[:img_size[0], :img_size[1]]
+        image = np.reshape(image, [1, image.shape[0], image.shape[1], 1])
+        t_pre_end = time()
+        time_preprocess = t_pre_end - t_pre_start
+
+        # 3) 网络前向推理
+        t_net_start = time()
+        enhance_img, ori_out_1, ori_out_2, seg_out, mnt_o_out, mnt_w_out, mnt_h_out, mnt_s_out = main_net_model.predict(image)
+        t_net_end = time()
+        time_network = t_net_end - t_net_start
+
+        # 4) 分割后处理（形态学开运算）
+        t_seg_post_start = time()
         round_seg = np.round(np.squeeze(seg_out))
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT,(5, 5))
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
         seg_out = cv2.morphologyEx(round_seg, cv2.MORPH_OPEN, kernel)
-        time_seg_post_end = time()
-        time_seg_post = time_seg_post_end - time_seg_post_start
-        
-        # 5. 细节点提取
-        time_mnt_extract_start = time()
-        mnt = label2mnt(np.squeeze(mnt_s_out)*np.round(np.squeeze(seg_out)), mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5)
-        time_mnt_extract_end = time()
-        time_mnt_extract = time_mnt_extract_end - time_mnt_extract_start
-        
-        # 6. NMS处理
-        time_nms_start = time()
+        t_seg_post_end = time()
+        time_seg_post = t_seg_post_end - t_seg_post_start
+
+        # 5) 细节点提取 + NMS
+        t_mnt_start = time()
+        mnt = label2mnt(np.squeeze(mnt_s_out) * np.round(np.squeeze(seg_out)),
+                        mnt_w_out, mnt_h_out, mnt_o_out, thresh=0.5)
+        t_mnt_end = time()
+        time_mnt_extract = t_mnt_end - t_mnt_start
+
+        t_nms_start = time()
         mnt_nms = nms(
             mnt,
             max_distance=args.nms_max_distance,
             max_angle=args.nms_max_angle
         )
-        time_nms_end = time()
-        time_nms = time_nms_end - time_nms_start
-        
-        # 7. 方向计算
-        time_ori_start = time()
+        t_nms_end = time()
+        time_nms = t_nms_end - t_nms_start
+
+        # 6) 方向场恢复
+        t_ori_start = time()
         ori_gau = ori_highest_peak_numpy(ori_out_1)
-        ori = (np.argmax(ori_gau, axis=-1)*2-90)/180.*np.pi  
-        time_ori_end = time()
-        time_ori = time_ori_end - time_ori_start
-        
-        # 输出详细信息
-        logging.info("检测到细节点数量: %d (NMS前: %d)"%(len(mnt_nms), len(mnt)))
-        if len(mnt_nms) > 0:
-            avg_confidence = np.mean(mnt_nms[:, 3]) if mnt_nms.shape[1] >= 4 else 0.0
-            max_confidence = np.max(mnt_nms[:, 3]) if mnt_nms.shape[1] >= 4 else 0.0
-            logging.info("细节点置信度 - 平均: %.3f, 最大: %.3f"%(avg_confidence, max_confidence))
-        
-        # 8. 保存.mnt文件
-        time_save_mnt_start = time()
-        mnt_writer(mnt_nms, img_name[i], img_size, "%s/%s/%s.mnt"%(output_dir, set_name, img_name[i]))        
-        time_save_mnt_end = time()
-        time_save_mnt = time_save_mnt_end - time_save_mnt_start
-        
-        # 9. 绘制可视化结果
-        time_draw_start = time()
-        draw_ori_on_img(image, ori, np.ones_like(seg_out), "%s/%s/%s_ori.png"%(output_dir, set_name, img_name[i]))        
-        draw_minutiae(image, mnt_nms[:,:3], "%s/%s/%s_mnt.png"%(output_dir, set_name, img_name[i]))
-        time_draw_end = time()
-        time_draw = time_draw_end - time_draw_start
-        
-        # 10. 保存图像文件（enh.png, seg.png）
-        time_save_img_start = time()
-        imageio.imwrite("%s/%s/%s_enh.png"%(output_dir, set_name, img_name[i]), (np.squeeze(enhance_img)*ndimage.zoom(np.round(np.squeeze(seg_out)), [8,8], order=0)).astype(np.uint8))
-        imageio.imwrite("%s/%s/%s_seg.png"%(output_dir, set_name, img_name[i]), (ndimage.zoom(np.round(np.squeeze(seg_out)), [8,8], order=0)*255).astype(np.uint8)) 
-        time_save_img_end = time()
-        time_save_img = time_save_img_end - time_save_img_start
-        
-        # 11. 保存.mat文件
-        time_save_mat_start = time()
-        io.savemat("%s/%s/%s.mat"%(output_dir, set_name, img_name[i]), {
-            'orientation': ori, 
-            'orientation_distribution_map': ori_out_1,
-            'minutiae': mnt_nms,
-            'segmentation': seg_out,
-            'confidence_scores': mnt_nms[:, 3] if mnt_nms.shape[1] >= 4 else None
-        })
-        time_save_mat_end = time()
-        time_save_mat = time_save_mat_end - time_save_mat_start
-        
-        # 记录所有时间统计
+        ori = (np.argmax(ori_gau, axis=-1) * 2 - 90) / 180.0 * np.pi
+        t_ori_end = time()
+        time_ori = t_ori_end - t_ori_start
+
+        # 7) 细节点统计信息
+        logging.info("检测到细节点数量: %d (NMS前: %d)", len(mnt_nms), len(mnt))
+        if len(mnt_nms) > 0 and mnt_nms.shape[1] >= 4:
+            avg_conf = float(np.mean(mnt_nms[:, 3]))
+            max_conf = float(np.max(mnt_nms[:, 3]))
+            logging.info("细节点置信度 - 平均: %.3f, 最大: %.3f", avg_conf, max_conf)
+
+        # 8) 保存 .mnt 文件
+        t_save_mnt_start = time()
+        mnt_writer(
+            mnt_nms,
+            name,
+            img_size,
+            os.path.join(output_dir, set_name, f"{name}.mnt"),
+        )
+        t_save_mnt_end = time()
+        time_save_mnt = t_save_mnt_end - t_save_mnt_start
+
+        # 9) 绘制可视化结果（方向场图 + 细节点图）
+        t_draw_start = time()
+        try:
+            draw_ori_on_img(image, ori, np.ones_like(seg_out),
+                            os.path.join(output_dir, set_name, f"{name}_ori.png"))
+            draw_minutiae(image, mnt_nms[:, :3],
+                          os.path.join(output_dir, set_name, f"{name}_mnt.png"))
+        except Exception as e:
+            logging.warning("绘制可视化结果失败: %s", e)
+        t_draw_end = time()
+        time_draw = t_draw_end - t_draw_start
+
+        # 10) 保存 enh.png 与 seg.png
+        t_save_img_start = time()
+        try:
+            # enh: 将相位图简单归一化到 [0, 255]
+            enh_phase = np.squeeze(enhance_img[..., 0]) if enhance_img.ndim == 4 else np.squeeze(enhance_img)
+            enh_phase = enh_phase.astype(np.float32)
+            enh_phase_norm = (enh_phase - enh_phase.min()) / (enh_phase.max() - enh_phase.min() + 1e-8)
+            enh_vis = (enh_phase_norm * 255.0).astype(np.uint8)
+            if enh_vis.shape != tuple(img_size[:2]):
+                enh_vis = ndimage.zoom(enh_vis, np.array(img_size[:2]) / np.array(enh_vis.shape), order=1)
+
+            seg_vis = (ndimage.zoom(np.round(np.squeeze(seg_out)), [8, 8], order=0) * 255).astype(np.uint8)
+            imageio.imwrite(os.path.join(output_dir, set_name, f"{name}_enh.png"), enh_vis)
+            imageio.imwrite(os.path.join(output_dir, set_name, f"{name}_seg.png"), seg_vis)
+        except Exception as e:
+            logging.warning("保存 enh/seg 图像失败: %s", e)
+        t_save_img_end = time()
+        time_save_img = t_save_img_end - t_save_img_start
+
+        # 11) 保存 .mat 文件（便于后续分析）
+        t_save_mat_start = time()
+        try:
+            io.savemat(os.path.join(output_dir, set_name, f"{name}.mat"), {
+                'orientation': ori,
+                'orientation_distribution_map': ori_out_1,
+                'minutiae': mnt_nms,
+                'segmentation': seg_out,
+                'confidence_scores': mnt_nms[:, 3] if mnt_nms.shape[1] >= 4 else None,
+            })
+        except Exception as e:
+            logging.warning("保存 .mat 文件失败: %s", e)
+        t_save_mat_end = time()
+        time_save_mat = t_save_mat_end - t_save_mat_start
+
+        # 12) 记录时间统计
         core_time = time_preprocess + time_network + time_seg_post + time_mnt_extract + time_nms + time_ori
         time_stats.append({
             'load_image': time_load_image,
@@ -1107,9 +1165,14 @@ def deploy(deploy_set, set_name=None, image_format=None):
             'draw': time_draw,
             'save_img': time_save_img,
             'save_mat': time_save_mat,
-            'core': core_time
+            'core': core_time,
         })
-        feature_total_mb, feature_details = estimate_feature_tensor_memory([
+
+        # 13) 统计移动端关键内存：输入+输出特征图
+        input_mem = tensor_memory_mb(image)
+        
+        # 输出特征图内存
+        output_feature_mb, output_details = estimate_feature_tensor_memory([
             ('enhance_img', enhance_img),
             ('ori_out_1', ori_out_1),
             ('ori_out_2', ori_out_2),
@@ -1119,62 +1182,108 @@ def deploy(deploy_set, set_name=None, image_format=None):
             ('mnt_h_out', mnt_h_out),
             ('mnt_s_out', mnt_s_out),
         ])
-        detail_text = ", ".join([f"{name}:{size:.2f}MB" for name, size in feature_details])
-        logging.info("特征图运行内存估计: 总计 %.2fMB (%s)", feature_total_mb, detail_text)
-        runtime_snapshot = collect_memory_snapshot()
-        runtime_delta = None
-        steady_state_delta = None
-        if baseline_memory_snapshot and baseline_memory_snapshot.get('rss') is not None and runtime_snapshot.get('rss') is not None:
-            runtime_delta = max(0.0, runtime_snapshot['rss'] - baseline_memory_snapshot['rss'])
-            if runtime_memory_peak is None:
-                runtime_memory_peak = runtime_delta
-            else:
-                runtime_memory_peak = max(runtime_memory_peak, runtime_delta)
-        if runtime_snapshot.get('rss') is not None:
-            if steady_state_baseline_snapshot is None:
-                steady_state_baseline_snapshot = runtime_snapshot
-                steady_state_deltas.append(0.0)
-                logging.info("稳态基准内存 - 常驻: %s, GPU当前: %s, GPU峰值: %s",
-                             format_memory_value(runtime_snapshot.get('rss')),
-                             format_memory_value(runtime_snapshot.get('gpu_current')),
-                             format_memory_value(runtime_snapshot.get('gpu_peak')))
-            else:
-                steady_state_delta = max(0.0, runtime_snapshot['rss'] - steady_state_baseline_snapshot.get('rss', 0.0))
-                steady_state_deltas.append(steady_state_delta)
-                if steady_state_peak is None:
-                    steady_state_peak = steady_state_delta
-                else:
-                    steady_state_peak = max(steady_state_peak, steady_state_delta)
-        logging.info("特征提取运行内存 , GPU当前: %s, GPU峰值: %s; 稳态基准增量: %s",
-                     format_memory_value(runtime_snapshot.get('gpu_current')),
-                     format_memory_value(runtime_snapshot.get('gpu_peak')),
-                     format_memory_value(steady_state_delta))
         
-        logging.info("时间统计 - 预处理: %.1fms, 网络推理: %.1fms, 分割后处理: %.1fms, 细节点提取: %.1fms, NMS: %.1fms, 方向计算: %.1fms, 核心总计: %.1fms"%
-            (time_preprocess*1000, time_network*1000, time_seg_post*1000, time_mnt_extract*1000, time_nms*1000, time_ori*1000, core_time*1000))
+        # 后处理中间结果内存
+        post_process_mb, post_details = estimate_feature_tensor_memory([
+            ('ori_gau', ori_gau),
+            ('ori', ori),
+            ('mnt_before_nms', mnt),
+            ('mnt_after_nms', mnt_nms),
+        ])
+        
+        total_feature_mb = output_feature_mb + post_process_mb
+        
+        # 记录详细统计
+        feature_memory_stats.append({
+            'input': input_mem,
+            'output': output_feature_mb,
+            'post_process': post_process_mb,
+            'total': total_feature_mb,
+            'details': output_details + post_details
+        })
+        
+        logging.info("【内存统计】")
+        logging.info("  输入图像: %.2f MB", input_mem)
+        logging.info("  网络输出特征图: %.2f MB", output_feature_mb)
+        for name, size_mb in output_details:
+            logging.info("    - %s: %.2f MB", name, size_mb)
+        logging.info("  后处理中间结果: %.2f MB", post_process_mb)
+        for name, size_mb in post_details:
+            logging.info("    - %s: %.2f MB", name, size_mb)
+        logging.info("  特征图总计: %.2f MB", total_feature_mb)
+        logging.info("  单帧内存峰值 ≈ 权重(%.2f MB) + 输入(%.2f MB) + 特征图(%.2f MB) = %.2f MB", 
+                     weight_size_mb, input_mem, total_feature_mb, 
+                     weight_size_mb + input_mem + total_feature_mb)
+
+    # -------- 7. 全局平均时间与内存统计 --------
+    logging.info("\n")
+    logging.info("="*60)
+    logging.info("【移动端内存预算总结】")
+    logging.info("="*60)
     
-    # 计算平均时间
-    if len(time_stats) > 0:
+    if feature_memory_stats:
+        avg_input = float(np.mean([stat['input'] for stat in feature_memory_stats]))
+        avg_output = float(np.mean([stat['output'] for stat in feature_memory_stats]))
+        avg_post = float(np.mean([stat['post_process'] for stat in feature_memory_stats]))
+        avg_total = float(np.mean([stat['total'] for stat in feature_memory_stats]))
+        
+        max_input = float(np.max([stat['input'] for stat in feature_memory_stats]))
+        max_output = float(np.max([stat['output'] for stat in feature_memory_stats]))
+        max_post = float(np.max([stat['post_process'] for stat in feature_memory_stats]))
+        max_total = float(np.max([stat['total'] for stat in feature_memory_stats]))
+        
+        logging.info("\n内存占用统计（基于 %d 张图像）:", len(feature_memory_stats))
+        logging.info("\n  各部分平均内存:")
+        logging.info("    模型权重: %.2f MB (float32)", weight_size_mb)
+        logging.info("    输入图像: %.2f MB", avg_input)
+        logging.info("    网络输出特征图: %.2f MB", avg_output)
+        logging.info("    后处理中间结果: %.2f MB", avg_post)
+        logging.info("    特征图小计: %.2f MB", avg_total)
+        logging.info("    ---")
+        logging.info("    单帧内存峰值(平均): %.2f MB", weight_size_mb + avg_input + avg_total)
+        
+        logging.info("\n  各部分峰值内存:")
+        logging.info("    模型权重: %.2f MB (float32)", weight_size_mb)
+        logging.info("    输入图像: %.2f MB", max_input)
+        logging.info("    网络输出特征图: %.2f MB", max_output)
+        logging.info("    后处理中间结果: %.2f MB", max_post)
+        logging.info("    特征图小计: %.2f MB", max_total)
+        logging.info("    ---")
+        logging.info("    单帧内存峰值(最大): %.2f MB", weight_size_mb + max_input + max_total)
+        
+        logging.info("\n  移动端优化建议:")
+        logging.info("    - float16 量化: 权重减半，总内存约 %.2f MB", 
+                     weight_size_mb/2 + max_input + max_total)
+        logging.info("    - int8 量化: 权重减至1/4，总内存约 %.2f MB", 
+                     weight_size_mb/4 + max_input + max_total)
+        logging.info("    - 输入改用 uint8: 输入内存减至1/4，总内存约 %.2f MB", 
+                     weight_size_mb + max_input/4 + max_total)
+        logging.info("    - 降低输入分辨率 50%%: 特征图约减至1/4，总内存约 %.2f MB",
+                     weight_size_mb + max_input/4 + max_total/4)
+        
+        # 输出详细的特征图分解（取第一张图的数据）
+        if len(feature_memory_stats) > 0:
+            logging.info("\n  详细特征图内存分解（首张图）:")
+            for name, size_mb in feature_memory_stats[0]['details']:
+                logging.info("    - %-25s: %6.2f MB", name, size_mb)
+    
+    if time_stats:
         avg_times = {}
         for key in time_stats[0].keys():
-            avg_times[key] = np.mean([stat[key] for stat in time_stats])
-        
-        logging.info("\n平均时间统计:")
-        logging.info("  图像预处理: %.1fms" % (avg_times['preprocess']*1000))
-        logging.info("  网络推理: %.1fms" % (avg_times['network']*1000))
-        logging.info("  分割后处理: %.1fms" % (avg_times['seg_post']*1000))
-        logging.info("  细节点提取: %.1fms" % (avg_times['mnt_extract']*1000))
-        logging.info("  NMS处理: %.1fms" % (avg_times['nms']*1000))
-        logging.info("  方向计算: %.1fms" % (avg_times['ori']*1000))
-        logging.info("  核心总计(预处理+网络+分割后处理+细节点提取+NMS+方向计算): %.1fms" % (avg_times['core']*1000))
-    # if runtime_memory_peak is not None:
-    #     logging.info("\n特征提取运行内存峰值(准备基准增量): %s", format_memory_value(runtime_memory_peak))
-    if steady_state_deltas:
-        steady_state_avg = np.mean(steady_state_deltas)
-        steady_state_peak_final = steady_state_peak if steady_state_peak is not None else np.max(steady_state_deltas)
-        logging.info("稳态基准增量平均值: %s", format_memory_value(steady_state_avg))
-        logging.info("稳态基准增量峰值: %s", format_memory_value(steady_state_peak_final))
-    return  
+            avg_times[key] = float(np.mean([stat[key] for stat in time_stats]))
+
+        logging.info("\n性能统计（平均耗时）:")
+        logging.info("  图像预处理: %.1fms", avg_times['preprocess'] * 1000)
+        logging.info("  网络推理: %.1fms", avg_times['network'] * 1000)
+        logging.info("  分割后处理: %.1fms", avg_times['seg_post'] * 1000)
+        logging.info("  细节点提取: %.1fms", avg_times['mnt_extract'] * 1000)
+        logging.info("  NMS处理: %.1fms", avg_times['nms'] * 1000)
+        logging.info("  方向计算: %.1fms", avg_times['ori'] * 1000)
+        logging.info("  核心总计: %.1fms", avg_times['core'] * 1000)
+    
+    logging.info("="*60)
+    return
+
 
 # 入口：根据模式运行
 def main():
